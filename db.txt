@@ -1,6 +1,6 @@
 CREATE TABLE LoaiBanh (
     MaLoaiBanh INT AUTO_INCREMENT PRIMARY KEY,
-    TenLoaiBanh VARCHAR(100)
+    TenLoaiBanh VARCHAR(100),
 );
 
 CREATE TABLE Banh (
@@ -8,7 +8,7 @@ CREATE TABLE Banh (
     TenBanh VARCHAR(100),
     Gia DECIMAL(10,2),
     SoLuong INT,
-    HinhAnh VARCHAR(255), -- lưu đường dẫn ảnh
+    HinhAnh VARCHAR(255),
     MaLoaiBanh INT,
     FOREIGN KEY (MaLoaiBanh) REFERENCES LoaiBanh(MaLoaiBanh)
 );
@@ -20,9 +20,9 @@ CREATE TABLE KhachHang (
     DiaChi VARCHAR(255)
 );
 
-
 CREATE TABLE NhanVien (
-    TenDangNhap varchar AUTO_INCREMENT PRIMARY KEY,
+    MaNV INT AUTO_INCREMENT PRIMARY KEY,
+    TenDangNhap VARCHAR(50) UNIQUE,
     HoTen VARCHAR(100),
     MatKhau VARCHAR(255),
     PhanQuyen ENUM('Admin', 'NhanVien')
@@ -32,7 +32,6 @@ CREATE TABLE DonHang (
     MaDon INT AUTO_INCREMENT PRIMARY KEY,
     NgayLap DATETIME,
     TongTien DECIMAL(10,2),
-    TrangThai VARCHAR(50),
     MaKH INT,
     MaNV INT,
     FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
@@ -49,3 +48,73 @@ CREATE TABLE ChiTietDonHang (
     FOREIGN KEY (MaDon) REFERENCES DonHang(MaDon),
     FOREIGN KEY (MaBanh) REFERENCES Banh(MaBanh)
 );
+
+-- =========================
+-- 1️⃣ Bảng Loại Bánh
+-- =========================
+INSERT INTO LoaiBanh (TenLoaiBanh)
+VALUES 
+('Bánh ngọt'),
+('Bánh mặn'),
+('Bánh donut');
+
+-- =========================
+-- 2️⃣ Bảng Bánh
+-- =========================
+INSERT INTO Banh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
+VALUES
+('Bánh kem dâu',        50000, 20, 'img/banhkemdau.jpg', 1),
+('Bánh su kem',         25000, 30, 'img/banhsukem.jpg', 1),
+('Bánh bông lan trứng muối', 45000, 25, 'img/banhbonglan.jpg', 1),
+
+('Bánh mì chà bông',    20000, 40, 'img/banhmichabong.jpg', 2),
+('Bánh pate',           18000, 50, 'img/banhpate.jpg', 2),
+('Bánh mì xúc xích',    22000, 45, 'img/banhmixucxich.jpg', 2),
+
+('Donut socola',        30000, 35, 'img/donutsocola.jpg', 3),
+('Donut dâu',           28000, 40, 'img/donutdau.jpg', 3),
+('Donut vani',          29000, 38, 'img/donutvani.jpg', 3);
+
+-- =========================
+-- 3️⃣ Bảng Nhân Viên
+-- =========================
+INSERT INTO NhanVien (TenDangNhap, HoTen, MatKhau, PhanQuyen)
+VALUES
+('admin',    'Nguyễn Văn A', '123456', 'Admin'),
+('nv01',     'Trần Thị B',   '123456', 'NhanVien'),
+('nv02',     'Lê Văn C',     '123456', 'NhanVien');
+
+-- =========================
+-- 4️⃣ Bảng Khách Hàng
+-- =========================
+INSERT INTO KhachHang (HoTen, SDT)
+VALUES
+('Nguyễn Hoàng D', '0901234567'),
+('Trần Mai E',     '0907654321'),
+('Lê Hữu F',       '0934567890');
+
+-- =========================
+-- 5️⃣ Bảng Đơn Hàng
+-- =========================
+INSERT INTO DonHang (NgayLap, TongTien, MaKH, MaNV)
+VALUES
+('2025-10-01 10:30:00', 95000, 1, 2),
+('2025-10-02 15:20:00', 60000, 2, 3),
+('2025-10-03 09:45:00', 52000, 3, 1);
+
+-- =========================
+-- 6️⃣ Bảng Chi Tiết Đơn Hàng
+-- =========================
+INSERT INTO ChiTietDonHang (MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
+VALUES
+-- Đơn 1: khách 1, nhân viên 2
+(1, 1, 1, 50000, 50000),
+(1, 4, 2, 22500, 45000),
+
+-- Đơn 2: khách 2, nhân viên 3
+(2, 7, 2, 30000, 60000),
+
+-- Đơn 3: khách 3, admin xử lý
+(3, 2, 1, 25000, 25000),
+(3, 9, 1, 27000, 27000);
+
