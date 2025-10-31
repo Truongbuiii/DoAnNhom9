@@ -1,4 +1,4 @@
-<?php include 'include/config.php'; ?> 
+
 <?php include 'include/header.php'; ?>
 <?php include 'include/sidebar.php'; ?>
 
@@ -38,18 +38,20 @@
 
             <h2 class="text-center mb-4 text-primary">Quản lý loại bánh</h2>
 
-            <!-- 📌 Thêm loại bánh -->
             <div class="card mb-4 shadow-sm p-4">
-                <h5 class="mb-3 text-primary">➕ Thêm loại bánh</h5>
+                <h5 class="mb-3 text-primary" >Thêm loại bánh</h5>
                 <form method="POST" action="">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="tenLoai" class="form-label">Tên loại bánh</label>
-                            <input type="text" class="form-control" id="tenLoai" name="tenLoai" placeholder="Nhập tên loại bánh..." required>
-                        </div>
-                    </div>
-                    <button type="submit" name="them" class="btn btn-success">Thêm</button>
-                </form>
+    <div class="row mb-3 align-items-end">
+        <div class="col-md-8">
+            <label for="tenLoai" class="form-label">Tên loại bánh</label>
+            <input type="text" class="form-control" id="tenLoai" name="tenLoai" placeholder="Nhập tên loại bánh..." required>
+        </div>
+        <div class="col-md- d-flex justify-content-end">
+            <button type="submit" name="them" class="btn btn-success mt-2">Thêm</button>
+        </div>
+    </div>
+</form>
+
             </div>
 
             <?php
@@ -68,7 +70,7 @@
 
             <!-- 📋 Danh sách loại bánh -->
             <div class="card shadow-sm p-4 mb-4">
-                <h5 class="mb-3 text-primary">📋 Danh sách loại bánh</h5>
+                <h5 class="mb-3 text-primary">Danh sách loại bánh</h5>
                 <table class="table table-bordered text-center align-middle">
                     <thead class="table-primary">
                         <tr>

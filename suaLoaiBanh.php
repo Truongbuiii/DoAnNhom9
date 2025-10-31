@@ -1,5 +1,5 @@
 <?php
-include 'include/config.php';
+include 'db/connect.php';
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
@@ -23,23 +23,36 @@ if (isset($_GET['id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tenMoi = trim($_POST['tenMoi']);
 
-    if (!empty($tenMoi)) {
-        $sqlUpdate = "UPDATE LoaiBanh SET TenLoaiBanh = '$tenMoi' WHERE MaLoaiBanh = $id";
-        if ($conn->query($sqlUpdate) === TRUE) {
-            echo "<script>
-                    alert('Cập nhật loại bánh thành công!');
-                    window.location.href = 'QuanLyLoaiBanh.php';
-                  </script>";
-            exit;
-        } else {
-            echo "<script>alert('Lỗi khi cập nhật: " . $conn->error . "');</script>";
-        }
+    // Nếu không nhập gì → giữ nguyên tên cũ
+    if (empty($tenMoi)) {
+        $tenMoi = $loaiBanh['TenLoaiBanh'];
+    }
+
+    // Nếu tên mới trùng với tên cũ → không cần update, nhưng vẫn coi như lưu thành công
+    if ($tenMoi === $loaiBanh['TenLoaiBanh']) {
+        echo "<script>
+                alert('Không có thay đổi nào — dữ liệu đã được giữ nguyên.');
+                window.location.href = 'QuanLyLoaiBanh.php';
+              </script>";
+        exit;
+    }
+
+    // Cập nhật nếu có thay đổi thực sự
+    $sqlUpdate = "UPDATE LoaiBanh SET TenLoaiBanh = ? WHERE MaLoaiBanh = ?";
+    $stmt = $conn->prepare($sqlUpdate);
+    $stmt->bind_param("si", $tenMoi, $id);
+
+    if ($stmt->execute()) {
+        echo "<script>
+                alert('Cập nhật loại bánh thành công!');
+                window.location.href = 'QuanLyLoaiBanh.php';
+              </script>";
+        exit;
     } else {
-        echo "<script>alert('Vui lòng nhập tên loại bánh mới!');</script>";
+        echo "<script>alert('Lỗi khi cập nhật: " . $conn->error . "');</script>";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -68,12 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Tên loại bánh mới:</label>
-                    <input type="text" class="form-control" name="tenMoi" placeholder="Nhập tên loại bánh mới">
+                    <input type="text" class="form-control" name="tenMoi" placeholder="Nhập tên loại bánh mới (hoặc để trống để giữ nguyên)">
                 </div>
 
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-success px-4">💾 Lưu thay đổi</button>
-                    <a href="QuanLyLoaiBanh.php" class="btn btn-secondary px-4">⬅ Quay lại</a>
+                    <button type="submit" class="btn btn-success px-4">Lưu thay đổi</button>
+                    <a href="QuanLyLoaiBanh.php" class="btn btn-secondary px-4">Quay lại</a>
                 </div>
             </form>
         </div>
