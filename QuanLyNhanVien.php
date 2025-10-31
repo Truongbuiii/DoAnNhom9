@@ -5,7 +5,7 @@
 // Kết nối database
 $servername = "localhost";
 $username = "root";
-$password = ""; // điền mật khẩu nếu có
+$password = "";
 $dbname = "nhom9";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -23,17 +23,12 @@ $result = $conn->query($sql);
 
 <div id="content-wrapper" class="d-flex flex-column">
   <div id="content">
+
     <!-- Thanh topbar -->
     <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-      <form class="form-inline">
-        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-          <i class="fa fa-bars"></i>
-        </button>
-      </form>
       <ul class="navbar-nav ml-auto">
         <li class="nav-item dropdown no-arrow">
-          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown">
             <span class="mr-2 d-none d-lg-inline text-gray-600 small">Quản trị viên</span>
             <img class="img-profile rounded-circle" src="img/undraw_profile.svg">
           </a>
@@ -44,7 +39,7 @@ $result = $conn->query($sql);
     <!-- Nội dung chính -->
     <div class="container-fluid">
       <h1 class="h3 mb-2 text-gray-800">Quản lý nhân viên</h1>
-      
+
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
           <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
@@ -53,7 +48,7 @@ $result = $conn->query($sql);
 
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered text-center" width="100%" cellspacing="0">
+            <table class="table table-bordered text-center">
               <thead class="bg-primary text-white">
                 <tr>
                   <th>Mã NV</th>
@@ -69,24 +64,26 @@ $result = $conn->query($sql);
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         echo "<tr>";
-                        echo "<td>" . $row['MaNV'] . "</td>";
-                        echo "<td>" . $row['TenDangNhap'] . "</td>";
-                        echo "<td>" . $row['HoTen'] . "</td>";
-                        echo "<td>" . $row['MatKhau'] . "</td>";
+                        echo "<td>{$row['MaNV']}</td>";
+                        echo "<td>{$row['TenDangNhap']}</td>";
+                        echo "<td>{$row['HoTen']}</td>";
+                        echo "<td>{$row['MatKhau']}</td>";
                         echo "<td><span class='badge " .
                              ($row['PhanQuyen'] == 'Admin' ? "badge-danger" : "badge-secondary") .
-                             "'>" . $row['PhanQuyen'] . "</span></td>";
+                             "'>{$row['PhanQuyen']}</span></td>";
                         echo "<td>
-                                <button class='btn btn-warning btn-sm btn-edit' 
-                                    data-id='" . $row['MaNV'] . "'
-                                    data-tendangnhap='" . $row['TenDangNhap'] . "'
-                                    data-hoten='" . $row['HoTen'] . "'
-                                    data-matkhau='" . $row['MatKhau'] . "'
-                                    data-phanquyen='" . $row['PhanQuyen'] . "'>
+                                <button class='btn btn-warning btn-sm btn-edit'
+                                    data-id='{$row['MaNV']}'
+                                    data-tendangnhap='{$row['TenDangNhap']}'
+                                    data-hoten='{$row['HoTen']}'
+                                    data-matkhau='{$row['MatKhau']}'
+                                    data-phanquyen='{$row['PhanQuyen']}'>
                                     <i class='fas fa-edit'></i> Sửa
                                 </button>
-                                <a href='nhanvien_delete.php?MaNV=" . $row['MaNV'] . "' class='btn btn-danger btn-sm' onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
-                                    <i class='fas fa-trash'></i> Xóa
+                                <a href='nhanvien_delete.php?MaNV={$row['MaNV']}'
+                                   class='btn btn-danger btn-sm'
+                                   onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
+                                   <i class='fas fa-trash'></i> Xóa
                                 </a>
                               </td>";
                         echo "</tr>";
@@ -110,7 +107,7 @@ $result = $conn->query($sql);
     <form method="POST" action="nhanvien_add_action.php" class="modal-content">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">Thêm nhân viên</h5>
-        <button type="button" class="btn btn-light border border-danger text-danger rounded-circle fw-bold" data-dismiss="modal" style="width:35px; height:35px;">×</button>
+        <button type="button" class="btn-close btn btn-light border border-danger text-danger" data-dismiss="modal">×</button>
       </div>
 
       <div class="modal-body">
@@ -125,8 +122,8 @@ $result = $conn->query($sql);
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Mật khẩu</label>
-          <input type="password" class="form-control" name="MatKhau" required>
+          <label class="form-label">Mật khẩu (6 số)</label>
+          <input type="text" class="form-control" name="MatKhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
 
         <div class="mb-3">
@@ -151,7 +148,7 @@ $result = $conn->query($sql);
     <form method="POST" action="nhanvien_update.php" class="modal-content">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">Sửa thông tin nhân viên</h5>
-        <button type="button" class="btn btn-light border border-danger text-danger rounded-circle fw-bold" data-dismiss="modal" style="width:35px; height:35px;">×</button>
+        <button type="button" class="btn-close btn btn-light border border-danger text-danger" data-dismiss="modal">×</button>
       </div>
 
       <div class="modal-body">
@@ -159,7 +156,7 @@ $result = $conn->query($sql);
 
         <div class="mb-3">
           <label class="form-label">Tên đăng nhập</label>
-          <input type="text" class="form-control" id="edit-tendangnhap" readonly>
+          <input type="text" class="form-control" id="edit-tendangnhap" name="TenDangNhap" readonly>
         </div>
 
         <div class="mb-3">
@@ -168,8 +165,8 @@ $result = $conn->query($sql);
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Mật khẩu</label>
-          <input type="text" class="form-control" name="MatKhau" id="edit-matkhau" required>
+          <label class="form-label">Mật khẩu (6 số)</label>
+          <input type="text" class="form-control" name="MatKhau" id="edit-matkhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
 
         <div class="mb-3">
@@ -189,13 +186,13 @@ $result = $conn->query($sql);
 </div>
 
 <script>
-  // Khi nhấn nút Sửa -> mở modal + gán dữ liệu
+  // Gán dữ liệu khi nhấn nút "Sửa"
   document.querySelectorAll('.btn-edit').forEach(button => {
     button.addEventListener('click', () => {
       document.getElementById('edit-id').value = button.dataset.id;
       document.getElementById('edit-tendangnhap').value = button.dataset.tendangnhap;
       document.getElementById('edit-hoten').value = button.dataset.hoten;
-      document.getElementById('edit-matkhau').value = button.dataset.matkhau;
+      document.getElementById('edit-matkhau').value = button.dataset.matkhau; // ✅ giữ nguyên mật khẩu hiện tại
       document.getElementById('edit-phanquyen').value = button.dataset.phanquyen;
       $('#editModal').modal('show');
     });
