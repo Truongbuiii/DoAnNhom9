@@ -82,7 +82,8 @@
         <div id="collapseThongKe" class="collapse" aria-labelledby="headingThongKe" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="ThongKeDoanhThu.php">Thống kê doanh thu</a>
-                <a class="collapse-item" href="BaoCaoTonKho.php">Báo cáo tồn kho</a>
+                <a class="collapse-item" href="Thongkesanpham.php">Thống kê sản phẩm</a>
+                <a class="collapse-item" href="ThongKeTonKho.php">Thống kê tồn kho</a>
             </div>
         </div>
     </li>
