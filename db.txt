@@ -1,0 +1,51 @@
+CREATE TABLE LoaiBanh (
+    MaLoaiBanh INT AUTO_INCREMENT PRIMARY KEY,
+    TenLoaiBanh VARCHAR(100)
+);
+
+CREATE TABLE Banh (
+    MaBanh INT AUTO_INCREMENT PRIMARY KEY,
+    TenBanh VARCHAR(100),
+    Gia DECIMAL(10,2),
+    SoLuong INT,
+    HinhAnh VARCHAR(255), -- lưu đường dẫn ảnh
+    MaLoaiBanh INT,
+    FOREIGN KEY (MaLoaiBanh) REFERENCES LoaiBanh(MaLoaiBanh)
+);
+
+CREATE TABLE KhachHang (
+    MaKH INT AUTO_INCREMENT PRIMARY KEY,
+    HoTen VARCHAR(100),
+    SDT VARCHAR(20),
+    DiaChi VARCHAR(255)
+);
+
+
+CREATE TABLE NhanVien (
+    TenDangNhap varchar AUTO_INCREMENT PRIMARY KEY,
+    HoTen VARCHAR(100),
+    MatKhau VARCHAR(255),
+    PhanQuyen ENUM('Admin', 'NhanVien')
+);
+
+CREATE TABLE DonHang (
+    MaDon INT AUTO_INCREMENT PRIMARY KEY,
+    NgayLap DATETIME,
+    TongTien DECIMAL(10,2),
+    TrangThai VARCHAR(50),
+    MaKH INT,
+    MaNV INT,
+    FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
+    FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV)
+);
+
+CREATE TABLE ChiTietDonHang (
+    MaDon INT,
+    MaBanh INT,
+    SoLuong INT,
+    DonGia DECIMAL(10,2),
+    ThanhTien DECIMAL(10,2),
+    PRIMARY KEY (MaDon, MaBanh),
+    FOREIGN KEY (MaDon) REFERENCES DonHang(MaDon),
+    FOREIGN KEY (MaBanh) REFERENCES Banh(MaBanh)
+);
