@@ -21,7 +21,8 @@
     <li class="nav-item active">
         <a class="nav-link" href="/index.php">
             <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Trang chủ</span></a>
+                <span>Trang bán hàng</span>
+</a>
     </li>
 
     <!-- Divider -->
@@ -32,13 +33,6 @@
         Tùy chọn
     </div>
 
-    <!-- Quản lý bán hàng -->
-    <li class="nav-item">
-        <a class="nav-link" href="QuanLyBanHang.php">
-            <i class="fas fa-fw fa-cash-register"></i>
-            <span>Quản lý bán hàng</span>
-        </a>
-    </li>
 
     <!-- Quản lý nhân viên -->
     <li class="nav-item">
