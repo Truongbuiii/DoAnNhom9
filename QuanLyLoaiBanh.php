@@ -115,5 +115,5 @@ if ($result && $result->num_rows > 0) {
     <!-- End of Main Content -->
 </div>
 <!-- End of Content Wrapper -->
-
+</div>
 <?php include 'include/footer.php'; ?>
