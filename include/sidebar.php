@@ -24,6 +24,12 @@
                 <span>Trang bán hàng</span>
 </a>
     </li>
+<li class="nav-item">
+    <a class="nav-link" href="quanLyLoaiBanh.php">
+        <i class="fas fa-fw fa-bread-slice"></i>
+        <span>Quản lý loại bánh</span>
+    </a>
+</li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
