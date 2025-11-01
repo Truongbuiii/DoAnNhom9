@@ -1,50 +1,44 @@
-// Pulling these images from Unsplash
-// Toshi the dog from https://unsplash.com/@charlesdeluvio - what a funny dog...
 
-.bg-login-image {
-  background: url($login-image);
-  background-position: center;
-  background-size: cover;
-}
-
-.bg-register-image {
-  background: url($register-image);
-  background-position: center;
-  background-size: cover;
-}
-
-.bg-password-image {
-  background: url($password-image);
-  background-position: center;
-  background-size: cover;
-}
-
-form.user {
-
-  .custom-checkbox.small {
-    label {
-      line-height: 1.5rem;
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center; /* Căn giữa dọc */
+      justify-content: center; /* Căn giữa ngang */
+      background: linear-gradient(135deg, #4e73df, #224abe);
+      font-family: 'Nunito', sans-serif;
     }
-  }
 
-  .form-control-user {
-    font-size: 0.8rem;
-    border-radius: 10rem;
-    padding: 1.5rem 1rem;
-  }
+    .login-container {
+      background: white;
+      width: 400px;
+      padding: 40px 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
 
-  .btn-user {
-    font-size: 0.8rem;
-    border-radius: 10rem;
-    padding: 0.75rem 1rem;
-  }
+    .login-container h1 {
+      font-size: 1.5rem;
+      margin-bottom: 25px;
+      color: #333;
+    }
 
-}
+    .form-control-user {
+      border-radius: 50px;
+      padding: 12px 20px;
+      font-size: 14px;
+    }
 
-.btn-google {
-  @include button-variant($brand-google, $white);
-}
+    .btn-user {
+      border-radius: 50px;
+      padding: 10px 20px;
+      background-color: #4e73df;
+      border: none;
+      font-size: 15px;
+    }
 
-.btn-facebook {
-  @include button-variant($brand-facebook, $white);
-}
+    .btn-user:hover {
+      background-color: #375ac0;
+    }
+ 
