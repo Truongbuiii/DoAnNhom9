@@ -1,6 +1,5 @@
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
-
+<?php include '../include1/header.php'; ?>
+<?php include '../include/sidebar.php'; ?>
 <?php
 // Kết nối database
 $servername = "localhost";
@@ -199,4 +198,4 @@ $result = $conn->query($sql);
   });
 </script>
 
-<?php include 'include/footer.php'; ?>
+<?php include '../include1/footer.php'; ?>

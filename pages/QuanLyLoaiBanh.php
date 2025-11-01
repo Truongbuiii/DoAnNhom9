@@ -1,6 +1,6 @@
 
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
+<?php include '../include1/header.php'; ?>
+<?php include '../include/sidebar.php'; ?>
 
 <!-- Content Wrapper -->
 <div id="content-wrapper" class="d-flex flex-column">
@@ -118,4 +118,4 @@ if ($result && $result->num_rows > 0) {
 </div>
 <!-- End of Content Wrapper -->
 </div>
-<?php include 'include/footer.php'; ?>
+<?php include '../include/footer.php'; ?>

@@ -1,5 +1,5 @@
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
+<?php include '../include1/header.php'; ?>
+<?php include '../include/sidebar.php'; ?>
 
 
 <div id="content-wrapper" class="d-flex flex-column">
@@ -35,9 +35,8 @@
        <!-- Begin Page Content -->
 <div class="container-fluid">
 
-    <h2 class="text-center mb-4 text-primary">Quản lý thông tin bánh</h2>
+    <h2 class="text-center mb-4 text-primary">Quản lý khách hàng</h2>
 
-    <!-- 🔘 Nút mở popup -->
    
 
 <!-- 💬 Modal Thêm bánh -->
@@ -45,47 +44,20 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalThemBanhLabel">Thêm bánh mới</h5>
+                <h5 class="modal-title" id="modalThemBanhLabel">Thêm khách hàng</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
 
             <form method="POST" action="" enctype="multipart/form-data">
                 <div class="modal-body">
 
-                    <!-- Chọn loại bánh -->
+
+                  
                     <div class="mb-3">
-                        <label for="loaiBanh" class="form-label">Loại bánh</label>
-                        <select class="form-select form-control" id="loaiBanh" name="loaiBanh" required>
-                            <option value="">-- Chọn loại bánh --</option>
-                            <?php
-                            $sqlLoai = "SELECT * FROM LoaiBanh";
-                            $resLoai = $conn->query($sqlLoai);
-                            if ($resLoai && $resLoai->num_rows > 0) {
-                                while ($row = $resLoai->fetch_assoc()) {
-                                    echo '<option value="' . $row['MaLoaiBanh'] . '">' . htmlspecialchars($row['TenLoaiBanh']) . '</option>';
-                                }
-                            }
-                            ?>
-                        </select>
+                        <label for="HoTen" class="form-label">Họ và tên</label>
+                        <input type="text" class="form-control" id="hoten" name="hoten" placeholder="Nhập họ tên..." required>
                     </div>
 
-                    <!-- Tên bánh -->
-                    <div class="mb-3">
-                        <label for="tenBanh" class="form-label">Tên bánh</label>
-                        <input type="text" class="form-control" id="tenBanh" name="tenBanh" placeholder="Nhập tên bánh..." required>
-                    </div>
-
-                    <!-- Giá bánh -->
-                    <div class="mb-3">
-                        <label for="gia" class="form-label">Giá (VNĐ)</label>
-                        <input type="number" class="form-control" id="gia" name="gia" min="0" placeholder="Nhập giá bánh..." required>
-                    </div>
-
-                    <!-- Số lượng -->
-                    <div class="mb-3">
-                        <label for="soLuong" class="form-label">Số lượng</label>
-                        <input type="number" class="form-control" id="soLuong" name="soLuong" min="1" placeholder="Nhập số lượng bánh..." required>
-                    </div>
 
                     <!-- Ảnh bánh -->
                     <div class="mb-3">
@@ -136,7 +108,7 @@ if (isset($_POST['themBanh'])) {
     // Kiểm tra có ảnh không
     $hinhAnh = "";
     if (isset($_FILES['hinhAnh']) && $_FILES['hinhAnh']['error'] == 0) {
-        $uploadDir = "uploads/";
+        $uploadDir = "/img/";
         if (!is_dir($uploadDir)) mkdir($uploadDir);
         $fileName = time() . "_" . basename($_FILES['hinhAnh']['name']);
         $targetFile = $uploadDir . $fileName;
@@ -200,7 +172,7 @@ if (isset($_POST['themBanh'])) {
                     $loai = htmlspecialchars($banh['TenLoaiBanh']);
                     $gia = number_format($banh['Gia'], 0, ',', '.');
                     $soluong = htmlspecialchars($banh['SoLuong']);
-                    $hinh = !empty($banh['HinhAnh']) ? htmlspecialchars($banh['HinhAnh']) : 'img/no-image.png';
+                    $hinh = !empty($banh['HinhAnh']) ? htmlspecialchars($banh['HinhAnh']) : '/img/no-image.png';
 
                     echo "
                     <tr>
@@ -235,4 +207,4 @@ if (isset($_POST['themBanh'])) {
 <!-- End of Content Wrapper -->
 </div>
         </div>
-<?php include 'include/footer.php'; ?>
+<?php include '../include1/footer.php'; ?>

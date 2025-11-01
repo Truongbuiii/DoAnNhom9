@@ -2,7 +2,7 @@
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" >
         <div class="sidebar-brand-icon rotate-n-15">
             <i class="fas fa-laugh-wink"></i>
         </div>
@@ -19,7 +19,7 @@
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item active">
-        <a class="nav-link" href="/index.php">
+        <a class="nav-link" href="index.php">
             <i class="fas fa-fw fa-tachometer-alt"></i>
                 <span>Trang bán hàng</span>
 </a>
@@ -37,7 +37,7 @@
 
     <!-- Quản lý nhân viên -->
     <li class="nav-item">
-        <a class="nav-link" href="/pages/QuanLyNhanVien.php">
+        <a class="nav-link" href="QuanLyNhanVien.php">
             <i class="fas fa-fw fa-users"></i>
             <span>Quản lý nhân viên</span>
         </a>
@@ -51,15 +51,15 @@
         </a>
         <div id="collapseBanh" class="collapse" aria-labelledby="headingBanh" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="/pages/QuanLyLoaiBanh.php">Quản lý loại bánh</a>
-                <a class="collapse-item" href="/pages/QuanLyThongTinBanh.php">Quản lý thông tin bánh</a>
+                <a class="collapse-item" href="QuanLyLoaiBanh.php">Quản lý loại bánh</a>
+                <a class="collapse-item" href="QuanLyThongTinBanh.php">Quản lý thông tin bánh</a>
             </div>
         </div>
     </li>
 
     <!-- Quản lý khách hàng -->
     <li class="nav-item">
-        <a class="nav-link" href="/pages/QuanLyKhachHang.php">
+        <a class="nav-link" href="QuanLyKhachHang.php">
             <i class="fas fa-fw fa-user"></i>
             <span>Quản lý khách hàng</span>
         </a>
@@ -67,7 +67,7 @@
 
     <!-- Quản lý đơn hàng -->
     <li class="nav-item">
-        <a class="nav-link" href="/pages/QuanLyDonHang.php">
+        <a class="nav-link" href="QuanLyDonHang.php">
             <i class="fas fa-fw fa-box"></i>
             <span>Quản lý đơn hàng</span>
         </a>
@@ -81,9 +81,9 @@
         </a>
         <div id="collapseThongKe" class="collapse" aria-labelledby="headingThongKe" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="/pages/ThongKeDoanhThu.php">Thống kê doanh thu</a>
-                <a class="collapse-item" href="/pages/Thongkesanpham.php">Thống kê sản phẩm</a>
-                <a class="collapse-item" href="/pages/ThongKeTonKho.php">Thống kê tồn kho</a>
+                <a class="collapse-item" href="ThongKeDoanhThu.php">Thống kê doanh thu</a>
+                <a class="collapse-item" href="Thongkesanpham.php">Thống kê sản phẩm</a>
+                <a class="collapse-item" href="ThongKeTonKho.php">Thống kê tồn kho</a>
             </div>
         </div>
     </li>

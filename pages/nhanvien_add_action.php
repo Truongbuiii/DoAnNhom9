@@ -1,15 +1,5 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "nhom9";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8");
-
-if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
-}
+ include '../db/connect.php'; 
 
 $TenDangNhap = trim($_POST['TenDangNhap']);
 $HoTen = trim($_POST['HoTen']);
