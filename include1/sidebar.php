@@ -19,7 +19,7 @@
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item active">
-        <a class="nav-link" href="index.php">
+        <a class="nav-link" href="../index.php">
             <i class="fas fa-fw fa-tachometer-alt"></i>
                 <span>Trang bán hàng</span>
 </a>
