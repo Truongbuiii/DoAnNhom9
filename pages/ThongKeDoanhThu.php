@@ -3,120 +3,133 @@ include '../db/connect.php';
 include '../include1/header.php';
 include '../include/sidebar.php'; 
 
-// Lấy dữ liệu filter từ form
+// Lấy dữ liệu từ form
+$loai = $_GET['loai'] ?? '';  // Loại thống kê: ngay, khoang, thang, nam
 $ngay = $_GET['ngay'] ?? '';
+$tu_ngay = $_GET['tu_ngay'] ?? '';
+$den_ngay = $_GET['den_ngay'] ?? '';
 $thang = $_GET['thang'] ?? '';
 $nam = $_GET['nam'] ?? '';
 
-// --- Truy vấn doanh thu theo ngày ---
-$sql_ngay = "SELECT DATE(NgayLap) AS Ngay, SUM(TongTien) AS DoanhThu FROM DonHang";
-if ($ngay) $sql_ngay .= " WHERE DATE(NgayLap) = '$ngay'";
-$sql_ngay .= " GROUP BY DATE(NgayLap) ORDER BY Ngay DESC";
-$result_ngay = mysqli_query($conn, $sql_ngay);
+// Khởi tạo WHERE cho từng loại thống kê
+$where_ngay = $ngay ? "WHERE DATE(NgayLap) = '$ngay'" : "";
+$where_khoang = ($tu_ngay && $den_ngay) ? "WHERE DATE(NgayLap) BETWEEN '$tu_ngay' AND '$den_ngay'" : "";
+$where_thang = ($thang && $nam) ? "WHERE MONTH(NgayLap) = '$thang' AND YEAR(NgayLap) = '$nam'" : "";
+$where_nam = $nam ? "WHERE YEAR(NgayLap) = '$nam'" : "";
 
-// --- Truy vấn doanh thu theo tuần ---
-$sql_tuan = "SELECT YEAR(NgayLap) AS Nam, WEEK(NgayLap,1) AS Tuan, SUM(TongTien) AS DoanhThu FROM DonHang WHERE 1";
-if ($nam) $sql_tuan .= " AND YEAR(NgayLap) = '$nam'";
-$sql_tuan .= " GROUP BY Nam, Tuan ORDER BY Nam DESC, Tuan DESC";
-$result_tuan = mysqli_query($conn, $sql_tuan);
+// Thực hiện truy vấn tùy loại
+if($loai == 'ngay' && $ngay) {
+    $sql = "SELECT DATE(NgayLap) AS Ngay, SUM(TongTien) AS DoanhThu 
+            FROM DonHang $where_ngay 
+            GROUP BY DATE(NgayLap)";
+} elseif($loai == 'khoang' && $tu_ngay && $den_ngay) {
+    $sql = "SELECT DATE(NgayLap) AS Ngay, SUM(TongTien) AS DoanhThu 
+            FROM DonHang $where_khoang 
+            GROUP BY DATE(NgayLap)";
+} elseif($loai == 'thang' && $thang && $nam) {
+    $sql = "SELECT YEAR(NgayLap) AS Nam, MONTH(NgayLap) AS Thang, SUM(TongTien) AS DoanhThu 
+            FROM DonHang $where_thang 
+            GROUP BY Nam, Thang";
+} elseif($loai == 'nam' && $nam) {
+    $sql = "SELECT YEAR(NgayLap) AS Nam, SUM(TongTien) AS DoanhThu 
+            FROM DonHang $where_nam 
+            GROUP BY Nam";
+} else {
+    $sql = "";
+}
 
-// --- Truy vấn doanh thu theo tháng ---
-$sql_thang = "SELECT YEAR(NgayLap) AS Nam, MONTH(NgayLap) AS Thang, SUM(TongTien) AS DoanhThu FROM DonHang WHERE 1";
-if ($thang) $sql_thang .= " AND MONTH(NgayLap) = '$thang'";
-if ($nam) $sql_thang .= " AND YEAR(NgayLap) = '$nam'";
-$sql_thang .= " GROUP BY Nam, Thang ORDER BY Nam DESC, Thang DESC";
-$result_thang = mysqli_query($conn, $sql_thang);
+$result = $sql ? mysqli_query($conn, $sql) : null;
 ?>
 
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800">Thống kê doanh thu</h1>
 
-    <!-- Filter form -->
+    <!-- Chọn loại thống kê -->
     <form method="get" class="form-inline mb-4">
-        <label class="mr-2">Ngày:</label>
-        <input type="date" name="ngay" value="<?= htmlspecialchars($ngay) ?>" class="form-control mr-3">
+        <label class="mr-2">Loại thống kê:</label>
+        <select name="loai" id="loai" class="form-control mr-3" onchange="showFields()">
+            <option value="">Chọn loại</option>
+            <option value="ngay" <?= $loai=='ngay'?'selected':'' ?>>Theo ngày</option>
+            <option value="khoang" <?= $loai=='khoang'?'selected':'' ?>>Theo khoảng thời gian</option>
+            <option value="thang" <?= $loai=='thang'?'selected':'' ?>>Theo tháng</option>
+            <option value="nam" <?= $loai=='nam'?'selected':'' ?>>Theo năm</option>
+        </select>
 
-        <label class="mr-2">Tháng:</label>
-        <select name="thang" class="form-control mr-3">
+        <!-- Ngày -->
+        <input type="date" name="ngay" id="ngay" value="<?= htmlspecialchars($ngay) ?>" class="form-control mr-3" style="display:none;">
+
+        <!-- Khoảng thời gian -->
+        <label id="lbl_tu" style="display:none;">Từ:</label>
+        <input type="date" name="tu_ngay" id="tu_ngay" value="<?= htmlspecialchars($tu_ngay) ?>" class="form-control mr-2" style="display:none;">
+        <label id="lbl_den" style="display:none;">Đến:</label>
+        <input type="date" name="den_ngay" id="den_ngay" value="<?= htmlspecialchars($den_ngay) ?>" class="form-control mr-3" style="display:none;">
+
+        <!-- Tháng -->
+        <select name="thang" id="thang" class="form-control mr-2" style="display:none;">
             <option value="">Chọn tháng</option>
             <?php for($m=1;$m<=12;$m++): ?>
             <option value="<?= $m ?>" <?= $thang==$m?'selected':'' ?>><?= $m ?></option>
             <?php endfor; ?>
         </select>
 
-        <label class="mr-2">Năm:</label>
-        <input type="number" name="nam" value="<?= htmlspecialchars($nam) ?>" class="form-control mr-3" placeholder="YYYY">
+        <!-- Năm -->
+        <input type="year" name="nam" id="nam" value="<?= htmlspecialchars($nam) ?>" class="form-control mr-3" placeholder="YYYY" style="display:none;">
 
         <button type="submit" class="btn btn-primary">Thống kê</button>
     </form>
 
-    <!-- Tabs -->
-    <ul class="nav nav-tabs" id="thongKeTabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="ngay-tab" data-toggle="tab" href="#ngay" role="tab">Theo ngày</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tuan-tab" data-toggle="tab" href="#tuan" role="tab">Theo tuần</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="thang-tab" data-toggle="tab" href="#thang" role="tab">Theo tháng</a>
-        </li>
-    </ul>
-
-    <div class="tab-content mt-3">
-        <!-- Ngày -->
-        <div class="tab-pane fade show active" id="ngay" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead><tr><th>Ngày</th><th>Doanh thu (VNĐ)</th></tr></thead>
-                    <tbody>
-                        <?php while($row = mysqli_fetch_assoc($result_ngay)): ?>
+    <!-- Kết quả thống kê -->
+    <?php if($result && mysqli_num_rows($result) > 0): ?>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <?php if($loai=='ngay' || $loai=='khoang'): ?>
+                            <th>Ngày</th><th>Doanh thu (VNĐ)</th>
+                        <?php elseif($loai=='thang'): ?>
+                            <th>Năm</th><th>Tháng</th><th>Doanh thu (VNĐ)</th>
+                        <?php elseif($loai=='nam'): ?>
+                            <th>Năm</th><th>Doanh thu (VNĐ)</th>
+                        <?php endif; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while($row = mysqli_fetch_assoc($result)): ?>
                         <tr>
-                            <td><?= $row['Ngay'] ?></td>
-                            <td><?= number_format($row['DoanhThu']) ?></td>
+                            <?php if($loai=='ngay' || $loai=='khoang'): ?>
+                                <td><?= $row['Ngay'] ?></td>
+                                <td><?= number_format($row['DoanhThu']) ?></td>
+                            <?php elseif($loai=='thang'): ?>
+                                <td><?= $row['Nam'] ?></td>
+                                <td><?= $row['Thang'] ?></td>
+                                <td><?= number_format($row['DoanhThu']) ?></td>
+                            <?php elseif($loai=='nam'): ?>
+                                <td><?= $row['Nam'] ?></td>
+                                <td><?= number_format($row['DoanhThu']) ?></td>
+                            <?php endif; ?>
                         </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
         </div>
-
-        <!-- Tuần -->
-        <div class="tab-pane fade" id="tuan" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead><tr><th>Năm</th><th>Tuần</th><th>Doanh thu (VNĐ)</th></tr></thead>
-                    <tbody>
-                        <?php while($row = mysqli_fetch_assoc($result_tuan)): ?>
-                        <tr>
-                            <td><?= $row['Nam'] ?></td>
-                            <td><?= $row['Tuan'] ?></td>
-                            <td><?= number_format($row['DoanhThu']) ?></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tháng -->
-        <div class="tab-pane fade" id="thang" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead><tr><th>Năm</th><th>Tháng</th><th>Doanh thu (VNĐ)</th></tr></thead>
-                    <tbody>
-                        <?php while($row = mysqli_fetch_assoc($result_thang)): ?>
-                        <tr>
-                            <td><?= $row['Nam'] ?></td>
-                            <td><?= $row['Thang'] ?></td>
-                            <td><?= number_format($row['DoanhThu']) ?></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <?php elseif($sql): ?>
+        <p class="text-center">Không có dữ liệu</p>
+    <?php endif; ?>
 </div>
+
+<script>
+function showFields() {
+    const loai = document.getElementById('loai').value;
+    document.getElementById('ngay').style.display = loai=='ngay' ? 'inline-block' : 'none';
+    document.getElementById('tu_ngay').style.display = loai=='khoang' ? 'inline-block' : 'none';
+    document.getElementById('den_ngay').style.display = loai=='khoang' ? 'inline-block' : 'none';
+    document.getElementById('lbl_tu').style.display = loai=='khoang' ? 'inline-block' : 'none';
+    document.getElementById('lbl_den').style.display = loai=='khoang' ? 'inline-block' : 'none';
+    document.getElementById('thang').style.display = loai=='thang' ? 'inline-block' : 'none';
+    document.getElementById('nam').style.display = (loai=='thang' || loai=='nam') ? 'inline-block' : 'none';
+}
+// Hiển thị ban đầu nếu có giá trị
+showFields();
+</script>
 
 <?php include '../include1/footer.php'; ?>
