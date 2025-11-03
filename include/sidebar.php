@@ -83,7 +83,6 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="/pages/ThongKeDoanhThu.php">Thống kê doanh thu</a>
                 <a class="collapse-item" href="/pages/Thongkesanpham.php">Thống kê sản phẩm</a>
-                <a class="collapse-item" href="/pages/ThongKeTonKho.php">Thống kê tồn kho</a>
             </div>
         </div>
     </li>
