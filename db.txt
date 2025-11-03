@@ -3,7 +3,6 @@ USE nhom9;
 
 
 -- Bảng Loại Bánh
--- =========================
 CREATE TABLE LoaiBanh (
     MaLoaiBanh INT AUTO_INCREMENT PRIMARY KEY,
     TenLoaiBanh VARCHAR(100)
