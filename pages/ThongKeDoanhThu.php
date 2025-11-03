@@ -1,7 +1,7 @@
 <?php
 include '../db/connect.php';
 include '../include1/header.php';
-include '../include/sidebar.php'; 
+include '../include1/sidebar.php'; 
 
 // Lấy dữ liệu từ form
 $loai = $_GET['loai'] ?? '';  // Loại thống kê: ngay, khoang, thang, nam
