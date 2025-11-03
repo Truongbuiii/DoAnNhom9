@@ -3,9 +3,6 @@ include '../db/connect.php';
 include '../include1/header.php';
 include '../include1/sidebar.php'; 
 
-// ==========================
-// Kiểm tra mã đơn hàng
-// ==========================
 if (!isset($_GET['MaDon'])) {
     echo "<div class='container mt-4'>
             <div class='alert alert-danger text-center'>
@@ -17,9 +14,7 @@ if (!isset($_GET['MaDon'])) {
 
 $maDon = $_GET['MaDon'];
 
-// ==========================
-// Truy vấn thông tin đơn hàng
-// ==========================
+// Lấy thông tin đơn hàng
 $order_sql = "
 SELECT d.MaDon, d.NgayLap, d.TongTien, k.HoTen AS TenKH, n.HoTen AS TenNV
 FROM DonHang d
@@ -43,14 +38,13 @@ if ($order_result->num_rows == 0) {
 
 $order = $order_result->fetch_assoc();
 
-// ==========================
-// Truy vấn chi tiết sản phẩm
-// ==========================
+// Lấy chi tiết sản phẩm theo khóa chính (MaDon, MaBanh)
 $detail_sql = "
 SELECT c.MaBanh, b.TenBanh, c.SoLuong, c.DonGia, c.ThanhTien
 FROM ChiTietDonHang c
 JOIN ThongTinBanh b ON c.MaBanh = b.MaBanh
 WHERE c.MaDon = ?
+ORDER BY c.MaBanh
 ";
 $detail_stmt = $conn->prepare($detail_sql);
 $detail_stmt->bind_param("i", $maDon);
@@ -66,14 +60,11 @@ $detail_result = $detail_stmt->get_result();
                 <i class="fas fa-arrow-left"></i> Quay lại
             </a>
         </div>
-
         <div class="card-body">
-            <!-- Thông tin đơn hàng -->
             <p><strong>Khách hàng:</strong> <?= htmlspecialchars($order['TenKH']) ?></p>
             <p><strong>Nhân viên:</strong> <?= htmlspecialchars($order['TenNV']) ?></p>
             <p><strong>Ngày lập:</strong> <?= $order['NgayLap'] ?></p>
 
-            <!-- Bảng chi tiết sản phẩm -->
             <table class="table table-bordered text-center mt-3">
                 <thead class="table-dark">
                     <tr>
