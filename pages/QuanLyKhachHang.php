@@ -117,7 +117,7 @@ if (isset($_POST['themBanh'])) {
         }
     }
 
-    $sql = "INSERT INTO Banh (MaLoaiBanh, TenBanh, Gia, SoLuong, HinhAnh) 
+    $sql = "INSERT INTO ThongTinBanh (MaLoaiBanh, TenBanh, Gia, SoLuong, HinhAnh) 
             VALUES ('$maLoai', '$tenBanh', '$gia', '$soLuong', '$hinhAnh')";
 
     if ($conn->query($sql) === TRUE) {
