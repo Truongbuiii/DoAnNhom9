@@ -83,33 +83,42 @@ $result = $sql ? mysqli_query($conn, $sql) : null;
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead>
-                    <tr>
-                        <?php if($loai=='ngay' || $loai=='khoang'): ?>
-                            <th>Ngày</th><th>Doanh thu (VNĐ)</th>
-                        <?php elseif($loai=='thang'): ?>
-                            <th>Năm</th><th>Tháng</th><th>Doanh thu (VNĐ)</th>
-                        <?php elseif($loai=='nam'): ?>
-                            <th>Năm</th><th>Doanh thu (VNĐ)</th>
-                        <?php endif; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <?php if($loai=='ngay' || $loai=='khoang'): ?>
-                                <td><?= $row['Ngay'] ?></td>
-                                <td><?= number_format($row['DoanhThu']) ?></td>
-                            <?php elseif($loai=='thang'): ?>
-                                <td><?= $row['Nam'] ?></td>
-                                <td><?= $row['Thang'] ?></td>
-                                <td><?= number_format($row['DoanhThu']) ?></td>
-                            <?php elseif($loai=='nam'): ?>
-                                <td><?= $row['Nam'] ?></td>
-                                <td><?= number_format($row['DoanhThu']) ?></td>
-                            <?php endif; ?>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
+    <tr>
+        <?php if($loai=='ngay' || $loai=='khoang'): ?>
+            <th>Ngày</th>
+            <th>Doanh thu (VNĐ)</th>
+        <?php elseif($loai=='thang'): ?>
+            <th>Năm</th>
+            <th>Tháng</th>
+            <th>Doanh thu (VNĐ)</th>
+        <?php elseif($loai=='nam'): ?>
+            <th>Năm</th>
+            <th>Doanh thu (VNĐ)</th>
+        <?php endif; ?>
+        <th>Chi tiết</th> <!-- cột mới -->
+    </tr>
+</thead>
+<tbody>
+    <?php while($row = mysqli_fetch_assoc($result)): ?>
+        <tr>
+            <?php if($loai=='ngay' || $loai=='khoang'): ?>
+                <td><?= $row['Ngay'] ?></td>
+                <td><?= number_format($row['DoanhThu']) ?></td>
+                <td><a href="chitietdonhang.php" class="btn btn-info btn-sm">Xem</a></td>
+            <?php elseif($loai=='thang'): ?>
+                <td><?= $row['Nam'] ?></td>
+                <td><?= $row['Thang'] ?></td>
+                <td><?= number_format($row['DoanhThu']) ?></td>
+                <td><a href="chitietdonhang.php" class="btn btn-info btn-sm">Xem</a></td>
+            <?php elseif($loai=='nam'): ?>
+                <td><?= $row['Nam'] ?></td>
+                <td><?= number_format($row['DoanhThu']) ?></td>
+                <td><a href="chitietdonhang.php" class="btn btn-info btn-sm">Xem</a></td>
+            <?php endif; ?>
+        </tr>
+    <?php endwhile; ?>
+</tbody>
+
             </table>
         </div>
     <?php elseif($sql): ?>
