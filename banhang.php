@@ -2,7 +2,7 @@
 session_start();
 include 'db/connect.php';
 include 'include/header.php';
-include 'include1/sidebar.php';
+include 'include/sidebar.php';
 
 // Thêm sản phẩm vào cart
 if(isset($_POST['add_product'])){
