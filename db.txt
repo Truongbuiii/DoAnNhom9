@@ -1,7 +1,7 @@
 CREATE DATABASE nhom9;
 USE nhom9;
 
--- =========================
+
 -- Bảng Loại Bánh
 -- =========================
 CREATE TABLE LoaiBanh (
@@ -110,9 +110,9 @@ VALUES
 -- =========================
 INSERT INTO KhachHang (HoTen, SDT)
 VALUES
-('Nguyễn Hoàng D', '0901234567', 'Hà Nội'),
-('Trần Mai E', '0907654321', 'TP.HCM'),
-('Lê Hữu F', '0934567890', 'Đà Nẵng');
+('Nguyễn Hoàng D', '0901234567'),
+('Trần Mai E', '0907654321'),
+('Lê Hữu F', '0934567890');
 
 -- =========================
 -- 5️⃣ Dữ liệu mẫu: Đơn Hàng
