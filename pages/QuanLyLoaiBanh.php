@@ -1,6 +1,5 @@
 
 <?php include '../include1/header.php'; 
-include '../db/connect.php'; 
  include '../include/sidebar.php'; ?>
 
 <!-- Content Wrapper -->

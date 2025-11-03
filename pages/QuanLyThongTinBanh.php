@@ -1,5 +1,5 @@
 <?php include '../include1/header.php'; ?>
-<?php include '../include/sidebar.php'; ?>
+<?php include '../include1/sidebar.php'; ?>
 
 <div class="container mt-4">
     <h2 class="text-center mb-4">QUẢN LÝ THÔNG TIN BÁNH</h2>
