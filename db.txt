@@ -30,8 +30,7 @@ CREATE TABLE ThongTinBanh (
 CREATE TABLE KhachHang (
     MaKH INT AUTO_INCREMENT PRIMARY KEY,
     HoTen VARCHAR(100),
-    SDT VARCHAR(20),
-    DiaChi VARCHAR(255)
+    SDT VARCHAR(20)
 );
 
 -- =========================
