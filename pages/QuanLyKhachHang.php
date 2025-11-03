@@ -81,9 +81,14 @@
 
                 $sql = "INSERT INTO KhachHang (HoTen, SDT)
                         VALUES ('$hoten', '$sdt')";
-                if ($conn->query($sql) === TRUE) {
-                    echo "<div class='alert alert-success mt-3'>🎉 Thêm khách hàng mới thành công!</div>";
-                } else {
+              if ($conn->query($sql) === TRUE) {
+                        echo "<script>
+                            alert('🎉 Thêm khách hàng mới thành công!');
+                            window.location.href = 'QuanLyKhachHang.php';
+                        </script>";
+                        exit;
+                    }
+                    else {
                     echo "<div class='alert alert-danger mt-3'>Lỗi: " . $conn->error . "</div>";
                 }
             }
@@ -115,6 +120,26 @@ if (isset($_GET['xoa'])) {
         }
     }
 }
+
+// ✏️ Xử lý sửa khách hàng
+if (isset($_POST['luu_sua'])) {
+    $ma = intval($_POST['sua_ma']);
+    $ten = trim($_POST['sua_ten']);
+    $sdt = trim($_POST['sua_sdt']);
+
+    $sql = "UPDATE KhachHang SET HoTen='$ten', SDT='$sdt' WHERE MaKH=$ma";
+    if ($conn->query($sql) === TRUE) {
+        echo "<script>
+            alert('✅ Cập nhật khách hàng thành công!');
+            window.location.href = 'QuanLyKhachHang.php';
+        </script>";
+        exit;
+    } else {
+        echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi cập nhật: " . $conn->error . "</div>";
+    }
+}
+
+
 ?>
           <!-- 📋 Danh sách khách hàng -->
 <div class="card shadow-sm p-4 mb-4">
@@ -138,24 +163,24 @@ if (isset($_GET['xoa'])) {
                     $ma = htmlspecialchars($row['MaKH']);
                     $ten = htmlspecialchars($row['HoTen']);
                     $sdt = htmlspecialchars($row['SDT']);
-
-                  echo "
-<tr>
-    <td>$ma</td>
-    <td>$ten</td>
-    <td>$sdt</td>
-    <td>
-        <button class='btn btn-warning btn-sm btn-edit' 
-                data-id='$ma' 
-                data-ten='$ten' 
-                data-sdt='$sdt'>Sửa</button>
-        <a href='?xoa=$ma' 
-           class='btn btn-danger btn-sm' 
-           onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng này không?\nNếu khách hàng đã có đơn hàng, hệ thống sẽ không cho phép xóa!\")'>
-           Xóa
-        </a>
-    </td>
-</tr>";
+                                echo "
+                                <tr>
+                                    <td>$ma</td>
+                                    <td>$ten</td>
+                                    <td>$sdt</td>
+                                    <td>
+                                        <button class='btn btn-warning btn-sm btn-edit' 
+                                                data-id='$ma' 
+                                                data-ten='$ten' 
+                                                data-sdt='$sdt'>Sửa</button>
+                                        <a href='?xoa=$ma' 
+                                        class='btn btn-danger btn-sm btn-delete'
+                                        data-ten='$ten'
+                                        data-id='$ma'>
+                                        Xóa
+                                        </a>
+                                    </td>
+                                </tr>";
 
                 }
             } else {
@@ -211,6 +236,15 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
 
         const modal = new bootstrap.Modal(document.getElementById('modalSuaKhachHang'));
         modal.show();
+    });
+});
+document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const ten = btn.dataset.ten;
+        const ma = btn.dataset.id;
+        if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa khách hàng "${ten}" (Mã #${ma}) không?\nNếu khách hàng đã có đơn hàng, hệ thống sẽ không cho phép xóa!`)) {
+            e.preventDefault(); // hủy link
+        }
     });
 });
 </script>
