@@ -1,8 +1,17 @@
+CREATE DATABASE nhom9;
+USE nhom9;
+
+-- =========================
+-- Bảng Loại Bánh
+-- =========================
 CREATE TABLE LoaiBanh (
     MaLoaiBanh INT AUTO_INCREMENT PRIMARY KEY,
     TenLoaiBanh VARCHAR(100)
 );
 
+-- =========================
+-- Bảng Thông Tin Bánh
+-- =========================
 CREATE TABLE ThongTinBanh (
     MaBanh INT AUTO_INCREMENT PRIMARY KEY,
     TenBanh VARCHAR(100),
@@ -13,6 +22,9 @@ CREATE TABLE ThongTinBanh (
     FOREIGN KEY (MaLoaiBanh) REFERENCES LoaiBanh(MaLoaiBanh)
 );
 
+-- =========================
+-- Bảng Khách Hàng
+-- =========================
 CREATE TABLE KhachHang (
     MaKH INT AUTO_INCREMENT PRIMARY KEY,
     HoTen VARCHAR(100),
@@ -20,6 +32,9 @@ CREATE TABLE KhachHang (
     DiaChi VARCHAR(255)
 );
 
+-- =========================
+-- Bảng Nhân Viên
+-- =========================
 CREATE TABLE NhanVien (
     MaNV INT AUTO_INCREMENT PRIMARY KEY,
     TenDangNhap VARCHAR(50) UNIQUE,
@@ -28,6 +43,9 @@ CREATE TABLE NhanVien (
     PhanQuyen ENUM('Admin', 'NhanVien')
 );
 
+-- =========================
+-- Bảng Đơn Hàng
+-- =========================
 CREATE TABLE DonHang (
     MaDon INT AUTO_INCREMENT PRIMARY KEY,
     NgayLap DATETIME,
@@ -38,6 +56,9 @@ CREATE TABLE DonHang (
     FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV)
 );
 
+-- =========================
+-- Bảng Chi Tiết Đơn Hàng
+-- =========================
 CREATE TABLE ChiTietDonHang (
     MaDon INT,
     MaBanh INT,
@@ -46,11 +67,11 @@ CREATE TABLE ChiTietDonHang (
     ThanhTien DECIMAL(10,2),
     PRIMARY KEY (MaDon, MaBanh),
     FOREIGN KEY (MaDon) REFERENCES DonHang(MaDon),
-    FOREIGN KEY (MaBanh) REFERENCES Banh(MaBanh)
+    FOREIGN KEY (MaBanh) REFERENCES ThongTinBanh(MaBanh)
 );
 
 -- =========================
--- 1️⃣ Bảng Loại Bánh
+-- 1️⃣ Dữ liệu mẫu: Loại Bánh
 -- =========================
 INSERT INTO LoaiBanh (TenLoaiBanh)
 VALUES 
@@ -59,9 +80,9 @@ VALUES
 ('Bánh donut');
 
 -- =========================
--- 2️⃣ Bảng Thong Tin Bánh
+-- 2️⃣ Dữ liệu mẫu: Thông Tin Bánh
 -- =========================
-INSERT INTO Thong Tin Banh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
+INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
 VALUES
 ('Bánh kem dâu',        50000, 20, '/img/banhkemdau.jpg', 1),
 ('Bánh su kem',         25000, 30, '/img/banhsukem.jpg', 1),
@@ -76,25 +97,25 @@ VALUES
 ('Donut vani',          29000, 38, '/img/donutvani.jpg', 3);
 
 -- =========================
--- 3️⃣ Bảng Nhân Viên
+-- 3️⃣ Dữ liệu mẫu: Nhân Viên
 -- =========================
 INSERT INTO NhanVien (TenDangNhap, HoTen, MatKhau, PhanQuyen)
 VALUES
-('admin',    'Nguyễn Văn A', '123456', 'Admin'),
-('nv01',     'Trần Thị B',   '123456', 'NhanVien'),
-('nv02',     'Lê Văn C',     '123456', 'NhanVien');
+('admin', 'Nguyễn Văn A', '123456', 'Admin'),
+('nv01', 'Trần Thị B', '123456', 'NhanVien'),
+('nv02', 'Lê Văn C', '123456', 'NhanVien');
 
 -- =========================
--- 4️⃣ Bảng Khách Hàng
+-- 4️⃣ Dữ liệu mẫu: Khách Hàng
 -- =========================
 INSERT INTO KhachHang (HoTen, SDT)
 VALUES
-('Nguyễn Hoàng D', '0901234567'),
-('Trần Mai E',     '0907654321'),
-('Lê Hữu F',       '0934567890');
+('Nguyễn Hoàng D', '0901234567', 'Hà Nội'),
+('Trần Mai E', '0907654321', 'TP.HCM'),
+('Lê Hữu F', '0934567890', 'Đà Nẵng');
 
 -- =========================
--- 5️⃣ Bảng Đơn Hàng
+-- 5️⃣ Dữ liệu mẫu: Đơn Hàng
 -- =========================
 INSERT INTO DonHang (NgayLap, TongTien, MaKH, MaNV)
 VALUES
@@ -103,18 +124,12 @@ VALUES
 ('2025-10-03 09:45:00', 52000, 3, 1);
 
 -- =========================
--- 6️⃣ Bảng Chi Tiết Đơn Hàng
+-- 6️⃣ Dữ liệu mẫu: Chi Tiết Đơn Hàng
 -- =========================
 INSERT INTO ChiTietDonHang (MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
 VALUES
--- Đơn 1: khách 1, nhân viên 2
 (1, 1, 1, 50000, 50000),
 (1, 4, 2, 22500, 45000),
-
--- Đơn 2: khách 2, nhân viên 3
 (2, 7, 2, 30000, 60000),
-
--- Đơn 3: khách 3, admin xử lý
 (3, 2, 1, 25000, 25000),
 (3, 9, 1, 27000, 27000);
-
