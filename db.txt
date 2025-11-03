@@ -1,7 +1,7 @@
 CREATE DATABASE nhom9;
 USE nhom9;
 
--- =========================
+
 -- Bảng Loại Bánh
 -- =========================
 CREATE TABLE LoaiBanh (
