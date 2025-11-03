@@ -1,6 +1,5 @@
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
-<?php include 'include/config.php'; ?>
+<?php include '../include1/header.php'; ?>
+<?php include '../include1/sidebar.php'; ?>
 
 <div class="container mt-4">
     <h2 class="text-center mb-4">THÊM BÁNH MỚI</h2>
@@ -68,4 +67,4 @@
     ?>
 </div>
 
-<?php include 'include/footer.php'; ?>
+<?php include '../include1/footer.php'; ?>

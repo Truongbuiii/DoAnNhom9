@@ -2,17 +2,7 @@
 <?php include '../include/sidebar.php'; ?>
 <?php
 // Kết nối database
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "nhom9";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8");
-
-if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
-}
+include '../db/connect.php';
 
 // Xử lý tìm kiếm
 $search = "";

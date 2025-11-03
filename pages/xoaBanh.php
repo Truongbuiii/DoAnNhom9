@@ -1,4 +1,6 @@
-<?php include 'include/config.php'; ?>
+<?php 
+include '../db/connect.php';
+ ?>
 
 <?php
 if (isset($_GET['id'])) {

@@ -1,19 +1,8 @@
 <?php include '../include1/header.php'; ?>
 <?php include '../include/sidebar.php'; ?>
 <?php
-// Kết nối database
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "nhom9";
+include '../db/connect.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8");
-
-// Kiểm tra kết nối
-if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
-}
 
 // Lấy danh sách nhân viên
 $sql = "SELECT * FROM nhanvien";

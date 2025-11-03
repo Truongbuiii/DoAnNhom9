@@ -1,6 +1,5 @@
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
-<?php include 'include/config.php'; ?>
+<?php include '../include1/header.php'; ?>
+<?php include '../include1/sidebar.php'; ?>
 
 <?php
 if (!isset($_GET['id'])) {
@@ -79,4 +78,4 @@ $banh = $result->fetch_assoc();
     ?>
 </div>
 
-<?php include 'include/footer.php'; ?>
+<?php include '../include1/footer.php'; ?>
