@@ -1,6 +1,7 @@
 
-<?php include '../include1/header.php'; ?>
-<?php include '../include/sidebar.php'; ?>
+<?php include '../include1/header.php'; 
+include '../db/connect.php'; 
+ include '../include/sidebar.php'; ?>
 
 <!-- Content Wrapper -->
 <div id="content-wrapper" class="d-flex flex-column">

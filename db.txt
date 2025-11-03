@@ -19,7 +19,10 @@ CREATE TABLE ThongTinBanh (
     HinhAnh VARCHAR(255),
     MaLoaiBanh INT,
     FOREIGN KEY (MaLoaiBanh) REFERENCES LoaiBanh(MaLoaiBanh)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
+
 
 -- =========================
 -- Bảng Khách Hàng
