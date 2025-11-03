@@ -23,14 +23,26 @@
 
     <?php
     if (isset($_POST['them'])) {
-        $tenLoai = $_POST['tenLoai'];
-        $sqlThem = "INSERT INTO LoaiBanh (TenLoaiBanh) VALUES ('$tenLoai')";
-        if ($conn->query($sqlThem) === TRUE) {
-            echo "<div class='alert alert-success'>Đã thêm loại bánh mới thành công!</div>";
-        } else {
-            echo "<div class='alert alert-danger'>Lỗi: " . $conn->error . "</div>";
-        }
+    $tenLoai = $_POST['tenLoai'];
+
+    // Lấy mã nhỏ nhất còn trống
+    $sqlTim = "SELECT MIN(t1.MaLoaiBanh + 1) AS maMoi
+               FROM LoaiBanh t1
+               WHERE NOT EXISTS (SELECT 1 FROM LoaiBanh t2 WHERE t2.MaLoaiBanh = t1.MaLoaiBanh + 1)";
+    $result = $conn->query($sqlTim);
+    $row = $result->fetch_assoc();
+    $maMoi = $row['maMoi'] ?? 1; // nếu chưa có loại nào thì bắt đầu từ 1
+
+    // Thêm loại bánh với mã thủ công
+    $sqlThem = "INSERT INTO LoaiBanh (MaLoaiBanh, TenLoaiBanh) VALUES ($maMoi, '$tenLoai')";
+    if ($conn->query($sqlThem) === TRUE) {
+        echo "<div class='alert alert-success'>Đã thêm loại bánh mới thành công!</div>";
+        echo "<script>window.location.href='".$_SERVER['PHP_SELF']."';</script>";
+    } else {
+        echo "<div class='alert alert-danger'>Lỗi: " . $conn->error . "</div>";
     }
+}
+
     ?>
 
     <div class="card shadow-sm p-4 mb-4">
@@ -43,10 +55,13 @@
                     <th>Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php
-                $sql = "SELECT * FROM LoaiBanh";
-                $result = $conn->query($sql);
+           <tbody>
+    <?php
+    // Lấy danh sách loại bánh và sắp xếp theo mã loại bánh tăng dần
+    $sql = "SELECT * FROM LoaiBanh ORDER BY MaLoaiBanh ASC";
+    $result = $conn->query($sql);
+
+              
                 if ($result && $result->num_rows > 0) {
                     while ($loai = $result->fetch_assoc()) {
                         $ma = htmlspecialchars($loai['MaLoaiBanh']);
