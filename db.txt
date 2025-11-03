@@ -85,17 +85,17 @@ VALUES
 -- =========================
 INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
 VALUES
-('Bánh kem dâu',        50000, 20, '/img/banhkemdau.jpg', 1),
-('Bánh su kem',         25000, 30, '/img/banhsukem.jpg', 1),
-('Bánh bông lan trứng muối', 45000, 25, '/img/banhbonglan.jpg', 1),
+('Bánh kem dâu',        50000, 20, 'banhkemdau.jpg', 1),
+('Bánh su kem',         25000, 30, 'banhsukem.jpg', 1),
+('Bánh bông lan trứng muối', 45000, 25, 'banhbonglan.jpg', 1),
 
-('Bánh mì chà bông',    20000, 40, '/img/banhmichabong.jpg', 2),
-('Bánh pate',           18000, 50, '/img/banhpate.jpg', 2),
-('Bánh mì xúc xích',    22000, 45, '/img/banhmixucxich.jpg', 2),
+('Bánh mì chà bông',    20000, 40, 'banhmichabong.jpg', 2),
+('Bánh pate',           18000, 50, 'banhpate.jpg', 2),
+('Bánh mì xúc xích',    22000, 45, 'banhmixucxich.jpg', 2),
 
-('Donut socola',        30000, 35, '/img/donutsocola.jpg', 3),
-('Donut dâu',           28000, 40, '/img/donutdau.jpg', 3),
-('Donut vani',          29000, 38, '/img/donutvani.jpg', 3);
+('Donut socola',        30000, 35, 'donutsocola.jpg', 3),
+('Donut dâu',           28000, 40, 'donutdau.jpg', 3),
+('Donut vani',          29000, 38, 'donutvani.jpg', 3);
 
 -- =========================
 -- 3️⃣ Dữ liệu mẫu: Nhân Viên

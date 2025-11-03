@@ -33,12 +33,19 @@
             </select>
         </div>
 
+        <!-- Upload hình ảnh -->
         <div class="mb-3">
             <label for="hinhAnh" class="form-label">Hình ảnh</label>
-            <input type="text" class="form-control" id="hinhAnh" name="hinhAnh" placeholder="Nhập đường dẫn ảnh (vd: img/banhkem.jpg)">
+            <input type="file" class="form-control" id="hinhAnh" name="hinhAnh" accept="image/*" required>
+
+            <!-- Xem trước ảnh -->
+            <div class="mt-3 text-center">
+                <img id="preview" src="" alt="Xem trước ảnh" 
+                     style="max-width:150px; display:none; border-radius:8px; border:1px solid #ccc; object-fit:cover;">
+            </div>
         </div>
 
-        <div class="text-center">
+        <div class="text-center mt-4">
             <button type="submit" name="luu" class="btn btn-success">Lưu</button>
             <a href="QuanLyThongTinBanh.php" class="btn btn-secondary">Quay lại</a>
         </div>
@@ -49,22 +56,53 @@
         $ten = $_POST['tenBanh'];
         $gia = $_POST['gia'];
         $soLuong = $_POST['soLuong'];
-        $hinh = $_POST['hinhAnh'];
         $maLoai = $_POST['maLoaiBanh'];
 
-        $sql = "INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
-                VALUES ('$ten', '$gia', '$soLuong', '$hinh', '$maLoai')";
+        // Xử lý upload hình ảnh
+        $targetDir = "../img/";
+        $fileName = basename($_FILES["hinhAnh"]["name"]);
+        $targetFilePath = $targetDir . $fileName;
+        $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
 
-        if ($conn->query($sql) === TRUE) {
-            echo "<script>
-                    alert('Thêm bánh mới thành công!');
-                    window.location='QuanLyThongTinBanh.php';
-                  </script>";
+        $allowTypes = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+
+        if (in_array($fileType, $allowTypes)) {
+            if (move_uploaded_file($_FILES["hinhAnh"]["tmp_name"], $targetFilePath)) {
+                // Lưu tên file (chỉ lưu tên, không lưu đường dẫn)
+                $sql = "INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
+                        VALUES ('$ten', '$gia', '$soLuong', '$fileName', '$maLoai')";
+
+                if ($conn->query($sql) === TRUE) {
+                    echo "<script>
+                            alert('Thêm bánh mới thành công!');
+                            window.location='QuanLyThongTinBanh.php';
+                          </script>";
+                } else {
+                    echo "<script>alert('Lỗi khi thêm bánh: " . $conn->error . "');</script>";
+                }
+            } else {
+                echo "<script>alert('Lỗi khi tải ảnh lên!');</script>";
+            }
         } else {
-            echo "<script>alert('Lỗi khi thêm bánh: " . $conn->error . "');</script>";
+            echo "<script>alert('Chỉ chấp nhận các định dạng ảnh: JPG, JPEG, PNG, GIF, WEBP');</script>";
         }
     }
     ?>
 </div>
+
+<!-- Xem trước ảnh trước khi tải lên -->
+<script>
+    document.getElementById('hinhAnh').addEventListener('change', function (event) {
+        const preview = document.getElementById('preview');
+        const file = event.target.files[0];
+
+        if (file) {
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+</script>
 
 <?php include '../include1/footer.php'; ?>
