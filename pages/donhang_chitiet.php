@@ -34,7 +34,7 @@ $maDon = $_GET['MaDon'];
 // ==========================
 $sql = "SELECT c.*, b.TenBanh 
         FROM chitietdonhang c 
-        JOIN banh b ON c.MaBanh = b.MaBanh 
+        JOIN thongtinbanh b ON c.MaBanh = b.MaBanh 
         WHERE c.MaDon = ?";
 $stmt = $conn->prepare($sql);
 
