@@ -119,19 +119,68 @@ while($loai = mysqli_fetch_assoc($loaiBanhRes)){
     $loaiBanhArr[] = $loai;
 }
 // ==========================
-// Thêm khách hàng mới vào CSDL nếu bấm nút "Lưu khách hàng mới"
+// Thanh toán (chỉ lúc này mới lưu khách hàng)
 // ==========================
-if (isset($_POST['luu_khachhang'])) {
-    $tenKH = trim($_POST['TenKH'] ?? '');
-    $sdt = trim($_POST['SDT'] ?? '');
+if(isset($_POST['checkout'])){
+    $chonKH = $_POST['chonKH'] ?? ''; // 'moi' hoặc 'cu'
+    $maKH = null;
 
-    if ($tenKH != '') {
-        mysqli_query($conn, "INSERT INTO KhachHang (HoTen, SDT) VALUES ('$tenKH', '$sdt')");
-        echo "<script>alert('Đã thêm khách hàng mới!'); window.location='banhang.php';</script>";
-        exit;
-    } else {
-        echo "<script>alert('Vui lòng nhập tên khách hàng!');</script>";
+    if($chonKH == 'moi'){
+        $tenKH = trim($_POST['TenKH'] ?? '');
+        $sdtKH = trim($_POST['SDT'] ?? '');
+
+        if($tenKH == ''){
+            echo "<script>alert('Vui lòng nhập tên khách hàng mới!');</script>";
+            exit;
+        }
+
+        // Thêm khách hàng mới
+        mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH','$sdtKH')");
+        $maKH = mysqli_insert_id($conn);
+
+    } elseif($chonKH == 'cu'){
+        $maKH = intval($_POST['MaKH'] ?? 0);
     }
+
+    // Nếu không có khách hàng nào được chọn
+    if(!$maKH){
+        // Tạo khách mặc định “Khách lẻ” nếu chưa có
+        $res = mysqli_query($conn,"SELECT MaKH FROM KhachHang WHERE HoTen='Khách lẻ' LIMIT 1");
+        if(mysqli_num_rows($res) > 0){
+            $maKH = mysqli_fetch_assoc($res)['MaKH'];
+        } else {
+            mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('Khách lẻ','')");
+            $maKH = mysqli_insert_id($conn);
+        }
+    }
+
+    // Tạo đơn hàng
+    mysqli_query($conn,"INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) VALUES(NOW(),0,$maKH,1)");
+    $maDon = mysqli_insert_id($conn);
+
+    $tongTien = 0;
+    foreach($_SESSION['cart'] as $maBanh => $item){
+        $tongTien += $item['ThanhTien'];
+        mysqli_query($conn,"INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
+                            VALUES($maDon,$maBanh,{$item['SoLuong']},{$item['DonGia']},{$item['ThanhTien']})");
+    }
+
+    mysqli_query($conn,"UPDATE DonHang SET TongTien=$tongTien WHERE MaDon=$maDon");
+
+    // Xóa giỏ hàng và reset các lựa chọn
+    unset($_SESSION['cart']);
+
+    echo "<script>
+        alert('Thanh toán thành công!');
+        // Reset form khách hàng
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('chonKH').value = '';
+            document.getElementById('TenKH').value = '';
+            document.getElementById('SDT').value = '';
+            document.getElementById('MaKH').value = '';
+        });
+        window.location='banhang.php';
+    </script>";
 }
 
 ?>
@@ -205,9 +254,7 @@ if (isset($_POST['luu_khachhang'])) {
                     <div class="mb-3">
                         <input type="text" name="SDT" placeholder="Số điện thoại" class="form-control">
                     </div>
-                    <button type="submit" name="luu_khachhang" class="btn btn-primary w-100 mb-3">
-                        Lưu khách hàng mới
-                    </button>
+                    
                 </div>
 
                 <!-- Form chọn khách hàng đã lưu -->
