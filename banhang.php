@@ -64,7 +64,7 @@ while($loai = mysqli_fetch_assoc($loaiBanhRes)){
 ?>
 
 <div class="container-fluid">
-    <div class="row">
+      <div class="row">
         <!-- Cột trái: thông tin khách + sản phẩm dạng tab -->
         <div class="col-lg-8">
             <form method="post">
