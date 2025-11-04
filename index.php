@@ -118,6 +118,22 @@ $loaiBanhArr = [];
 while($loai = mysqli_fetch_assoc($loaiBanhRes)){
     $loaiBanhArr[] = $loai;
 }
+// ==========================
+// Thêm khách hàng mới vào CSDL nếu bấm nút "Lưu khách hàng mới"
+// ==========================
+if (isset($_POST['luu_khachhang'])) {
+    $tenKH = trim($_POST['TenKH'] ?? '');
+    $sdt = trim($_POST['SDT'] ?? '');
+
+    if ($tenKH != '') {
+        mysqli_query($conn, "INSERT INTO KhachHang (HoTen, SDT) VALUES ('$tenKH', '$sdt')");
+        echo "<script>alert('Đã thêm khách hàng mới!'); window.location='banhang.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Vui lòng nhập tên khách hàng!');</script>";
+    }
+}
+
 ?>
 
 <style>
@@ -164,21 +180,77 @@ while($loai = mysqli_fetch_assoc($loaiBanhRes)){
 </style>
 
 <div class="container-fluid">
-        <h1 class="h3 mb-4 text-gray-800" >Trang bán hàng</h1>
+    <h1 class="h3 mb-4 text-gray-800">Trang bán hàng</h1>
+
     <div class="row">
         <!-- Cột trái -->
         <div class="col-lg-6">
             <form method="post">
                 <h5>Thông tin khách hàng</h5>
+
+                <!-- Chọn loại khách hàng -->
                 <div class="mb-3">
-                    <input type="text" name="TenKH" placeholder="Tên khách" class="form-control" required>
+                    <select id="chonLoaiKH" class="form-control" name="chonKH">
+                        <option value="">-- Chọn loại khách hàng --</option>
+                        <option value="moi">Thêm khách hàng mới</option>
+                        <option value="cu">Chọn khách hàng đã lưu</option>
+                    </select>
                 </div>
-                <div class="mb-3">
-                    <input type="text" name="SDT" placeholder="Số điện thoại" class="form-control">
+
+                <!-- Form thêm khách hàng mới -->
+                <div id="formMoi" style="display:none;">
+                    <div class="mb-3">
+                        <input type="text" name="TenKH" placeholder="Tên khách hàng" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" name="SDT" placeholder="Số điện thoại" class="form-control">
+                    </div>
+                    <button type="submit" name="luu_khachhang" class="btn btn-primary w-100 mb-3">
+                        Lưu khách hàng mới
+                    </button>
+                </div>
+
+                <!-- Form chọn khách hàng đã lưu -->
+                <div id="formCu" style="display:none;">
+                    <input type="text" id="timKiemKH" class="form-control mb-2" placeholder="Nhập tên hoặc số điện thoại...">
+
+                    <select name="MaKH" id="chonKHSelect" class="form-select" size="5">
+                        <?php
+                        $khRes = mysqli_query($conn, "SELECT * FROM KhachHang ORDER BY HoTen ASC");
+                        while($kh = mysqli_fetch_assoc($khRes)){
+                            echo "<option value='{$kh['MaKH']}'>{$kh['HoTen']} - {$kh['SDT']}</option>";
+                        }
+                        ?>
+                    </select>
                 </div>
             </form>
+        </div>
+    </div>
+
+<script>
+    // Khi người dùng chọn loại khách hàng
+    document.getElementById("chonLoaiKH").addEventListener("change", function() {
+        var loai = this.value;
+        document.getElementById("formMoi").style.display = (loai === "moi") ? "block" : "none";
+        document.getElementById("formCu").style.display = (loai === "cu") ? "block" : "none";
+    });
+
+    // Tìm kiếm khách hàng trong danh sách
+    document.getElementById("timKiemKH").addEventListener("keyup", function() {
+        var filter = this.value.toLowerCase();
+        var options = document.getElementById("chonKHSelect").options;
+
+        for (let i = 0; i < options.length; i++) {
+            let text = options[i].text.toLowerCase();
+            options[i].style.display = text.includes(filter) ? "" : "none";
+        }
+    });
+</script>
+
+
 
             <!-- Tabs danh mục -->
+                <h5>Sản phẩm</h5>
             <ul class="nav nav-tabs" id="tabLoaiBanh" role="tablist">
                 <?php foreach($loaiBanhArr as $index => $loai): ?>
                 <li class="nav-item" role="presentation">
@@ -260,7 +332,7 @@ while($loai = mysqli_fetch_assoc($loaiBanhRes)){
     </div>
 </div>
 
-<?php include 'include/footer.php'; ?>
+
 
                                
                     </div>
