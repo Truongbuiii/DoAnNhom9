@@ -32,7 +32,6 @@
                                     <label for="sdt" class="form-label">Số điện thoại</label>
                                     <input type="text" class="form-control" id="sdt" name="sdt" placeholder="Nhập số điện thoại..." required>
                                 </div>
- 
                             </div>
 
                             <div class="modal-footer">
@@ -121,6 +120,7 @@ if (isset($_POST['luu_sua'])) {
                 <th>Mã KH</th>
                 <th>Họ và tên</th>
                 <th>Số điện thoại</th>
+                <th>Tình trạng</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -134,6 +134,8 @@ if (isset($_POST['luu_sua'])) {
                     $ma = htmlspecialchars($row['MaKH']);
                     $ten = htmlspecialchars($row['HoTen']);
                     $sdt = htmlspecialchars($row['SDT']);
+                    $sdt = htmlspecialchars($row['SDT']);
+
                                 echo "
                                 <tr>
                                     <td>$ma</td>
