@@ -7,6 +7,7 @@ if (isset($_POST['MaNV'])) {
     $TenDangNhap = $_POST['TenDangNhap'];
     $HoTen = $_POST['HoTen'];
     $MatKhau = $_POST['MatKhau'];
+    $TinhTrang = $_POST['TinhTrang'];
     $PhanQuyen = $_POST['PhanQuyen'];
 
     // ✅ Kiểm tra mật khẩu hợp lệ (6 chữ số)
@@ -29,7 +30,7 @@ if (isset($_POST['MaNV'])) {
     // ✅ Cập nhật thông tin
     $sql = "UPDATE nhanvien SET HoTen=?, MatKhau=?, PhanQuyen=? WHERE MaNV=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssi", $HoTen, $MatKhau, $PhanQuyen, $MaNV);
+    $stmt->bind_param("ssssi", $HoTen,  $MatKhau, $TinhTrang ,$PhanQuyen, $MaNV);
 
     if ($stmt->execute()) {
         echo "<script>alert('Cập nhật thành công!'); window.location.href='QuanLyNhanVien.php';</script>";
