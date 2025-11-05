@@ -5,7 +5,8 @@ USE nhom9;
 -- Bảng Loại Bánh
 CREATE TABLE LoaiBanh (
     MaLoaiBanh INT AUTO_INCREMENT PRIMARY KEY,
-    TenLoaiBanh VARCHAR(100)
+    TenLoaiBanh VARCHAR(100),
+    TinhTrang TINYINT(1) DEFAULT 1
 );
 
 -- =========================
@@ -13,14 +14,15 @@ CREATE TABLE LoaiBanh (
 -- =========================
 CREATE TABLE ThongTinBanh (
     MaBanh INT AUTO_INCREMENT PRIMARY KEY,
-    TenBanh VARCHAR(100),
-    Gia DECIMAL(10,2),
-    SoLuong INT,
+    TenBanh VARCHAR(100) NOT NULL,
+    Gia DECIMAL(10,2) NOT NULL,
+    SoLuong INT NOT NULL,
     HinhAnh VARCHAR(255),
+    TinhTrang TINYINT(1) DEFAULT 1, -- 1 = mở (đang bán), 0 = khóa (ngừng bán)
     MaLoaiBanh INT,
     FOREIGN KEY (MaLoaiBanh) REFERENCES LoaiBanh(MaLoaiBanh)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 
@@ -30,7 +32,8 @@ CREATE TABLE ThongTinBanh (
 CREATE TABLE KhachHang (
     MaKH INT AUTO_INCREMENT PRIMARY KEY,
     HoTen VARCHAR(100),
-    SDT VARCHAR(20)
+    SDT VARCHAR(20),
+    TinhTrang TINYINT(1) DEFAULT 1
 );
 
 -- =========================
@@ -41,7 +44,8 @@ CREATE TABLE NhanVien (
     TenDangNhap VARCHAR(50) UNIQUE,
     HoTen VARCHAR(100),
     MatKhau VARCHAR(255),
-    PhanQuyen ENUM('Admin', 'NhanVien')
+    PhanQuyen ENUM('Admin', 'NhanVien'),
+    TinhTrang TINYINT(1) DEFAULT 1
 );
 
 -- =========================
@@ -74,46 +78,49 @@ CREATE TABLE ChiTietDonHang (
 -- =========================
 -- 1️⃣ Dữ liệu mẫu: Loại Bánh
 -- =========================
-INSERT INTO LoaiBanh (TenLoaiBanh)
+INSERT INTO LoaiBanh (TenLoaiBanh,TinhTrang)
 VALUES 
-('Bánh ngọt'),
-('Bánh mặn'),
-('Bánh donut');
+('Bánh ngọt',1),
+('Bánh mặn',1),
+('Bánh donut',1);
 
+-- =========================
 -- =========================
 -- 2️⃣ Dữ liệu mẫu: Thông Tin Bánh
 -- =========================
-INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh)
+INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, HinhAnh, MaLoaiBanh, TinhTrang)
 VALUES
-('Bánh kem dâu',        50000, 20, 'BanhKemDau.jpg', 1),
-('Bánh su kem',         25000, 30, 'BanhSuKem.jpg', 1),
-('Bánh bông lan trứng muối', 45000, 25, 'BanhBongLanTrungMuoi.jpg', 1),
+('Bánh kem dâu',        50000, 20, 'BanhKemDau.jpg', 1, 1),
+('Bánh su kem',         25000, 30, 'BanhSuKem.jpg', 1, 1),
+('Bánh bông lan trứng muối', 45000, 25, 'BanhBongLanTrungMuoi.jpg', 1, 1),
 
-('Bánh mì chà bông',    20000, 40, 'BanhMiChaBong.jpg', 2),
-('Bánh pate',           18000, 50, 'BanhMiPate.jpg', 2),
-('Bánh mì xúc xích',    22000, 45, 'BanhMiXucXich.jpg', 2),
+('Bánh mì chà bông',    20000, 40, 'BanhMiChaBong.jpg', 2, 1),
+('Bánh pate',           18000, 50, 'BanhMiPate.jpg', 2, 1),
+('Bánh mì xúc xích',    22000, 45, 'BanhMiXucXich.jpg', 2, 1),
 
-('Donut socola',        30000, 35, 'BanhDonutSocola.jpg', 3),
-('Donut dâu',           28000, 40, 'BanhDonutDau.jpg', 3),
-('Donut vani',          29000, 38, 'BanhDonutVani.jpg', 3);
+('Donut socola',        30000, 35, 'BanhDonutSocola.jpg', 3, 1),
+('Donut dâu',           28000, 40, 'BanhDonutDau.jpg', 3, 1),
+('Donut vani',          29000, 38, 'BanhDonutVani.jpg', 3, 1);
+
 
 -- =========================
 -- 3️⃣ Dữ liệu mẫu: Nhân Viên
 -- =========================
-INSERT INTO NhanVien (TenDangNhap, HoTen, MatKhau, PhanQuyen)
+INSERT INTO NhanVien (TenDangNhap, HoTen, MatKhau, PhanQuyen, TinhTrang)
 VALUES
-('admin', 'Nguyễn Văn A', '123456', 'Admin'),
-('nv01', 'Trần Thị B', '123456', 'NhanVien'),
-('nv02', 'Lê Văn C', '123456', 'NhanVien');
+('admin', 'Nguyễn Văn A', '123456', 'Admin', 1),
+('nv01', 'Trần Thị B', '123456', 'NhanVien', 1),
+('nv02', 'Lê Văn C', '123456', 'NhanVien', 1);
+
 
 -- =========================
 -- 4️⃣ Dữ liệu mẫu: Khách Hàng
 -- =========================
-INSERT INTO KhachHang (HoTen, SDT)
+INSERT INTO KhachHang (HoTen, SDT, TinhTrang)
 VALUES
-('Nguyễn Hoàng D', '0901234567'),
-('Trần Mai E', '0907654321'),
-('Lê Hữu F', '0934567890');
+('Nguyễn Hoàng D', '0901234567', 1),
+('Trần Mai E', '0907654321', 1),
+('Lê Hữu F', '0934567890', 1);
 
 -- =========================
 -- 5️⃣ Dữ liệu mẫu: Đơn Hàng
