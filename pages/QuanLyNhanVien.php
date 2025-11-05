@@ -30,8 +30,7 @@ $result = $conn->query($sql);
                   <th>Tên đăng nhập</th>
                   <th>Họ tên</th>
                   <th>Mật khẩu</th>
-                                    <th>Phân quyền</th>
-
+                  <th>Phân quyền</th>
                   <th>Tình trạng</th>
                   <th>Hành động</th>
                 </tr>
