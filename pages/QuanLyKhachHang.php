@@ -1,6 +1,63 @@
 <?php 
 include '../include1/header.php'; 
 include '../include1/sidebar.php'; 
+
+// 🗑️ Xử lý xóa hoặc khóa khách hàng
+if (isset($_GET['xoa'])) {
+    $ma = intval($_GET['xoa']);
+    $ten = urldecode($_GET['ten'] ?? '');
+
+    // Kiểm tra khách hàng có đơn hàng chưa
+    $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");
+
+    if ($kiemTra && $kiemTra->num_rows > 0) {
+        // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
+        echo "
+        <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
+            <h5>🚫 Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
+            <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
+            <div class='d-flex justify-content-center gap-2 mt-3'>
+                <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
+                <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
+            </div>
+        </div>
+        ";
+    } else {
+        // Không có đơn hàng → xóa luôn
+        if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
+            echo "
+            <div class='position-fixed top-50 start-50 translate-middle bg-success text-white p-4 rounded shadow text-center' style='z-index:1055;'>
+                ✅ Đã xóa khách hàng thành công!
+            </div>
+            <script>
+                setTimeout(() => window.location.href='QuanLyKhachHang.php', 1200);
+            </script>";
+        } else {
+            echo "
+            <div class='alert alert-danger mt-3'>
+                ⚠️ Lỗi khi xóa khách hàng: " . htmlspecialchars($conn->error) . "
+            </div>";
+        }
+    }
+}
+
+// 🔒 Xử lý khóa khách hàng
+if (isset($_GET['khoa'])) {
+    $ma = intval($_GET['khoa']);
+    if ($conn->query("UPDATE KhachHang SET TinhTrang = 0 WHERE MaKH = $ma")) {
+        echo "
+        <div class='position-fixed top-50 start-50 translate-middle bg-warning text-dark p-4 rounded shadow text-center' style='z-index:1055;'>
+            Đã khóa khách hàng thành công!
+        </div>
+        <script>
+            setTimeout(() => window.location.href='QuanLyKhachHang.php', 1200);
+        </script>";
+    } else {
+        echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi khóa khách hàng.</div>";
+    }
+}
+
+
 ?>
 
 <!-- Begin Page Content -->
@@ -65,25 +122,6 @@ include '../include1/sidebar.php';
         }
     }
 
-    // 🗑️ Xử lý xóa khách hàng
-    if (isset($_GET['xoa'])) {
-        $ma = intval($_GET['xoa']);
-        $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");
-
-        if ($kiemTra && $kiemTra->num_rows > 0) {
-            echo "<div class='alert alert-danger mt-3'>
-                ❌ Không thể xóa khách hàng <b>Mã #$ma</b> vì đã có đơn hàng trong hệ thống.
-            </div>";
-        } else {
-            if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
-                echo "<div class='alert alert-success mt-3'>✅ Đã xóa khách hàng thành công!</div>";
-            } else {
-                echo "<div class='alert alert-danger mt-3'>
-                    ⚠️ Lỗi khi xóa khách hàng: " . htmlspecialchars($conn->error) . "
-                </div>";
-            }
-        }
-    }
 
     // ✏️ Xử lý sửa khách hàng
     if (isset($_POST['luu_sua'])) {
@@ -111,65 +149,65 @@ include '../include1/sidebar.php';
     <!-- 📋 Danh sách khách hàng -->
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="text-primary mb-3">Danh sách khách hàng</h5>
-        <table class="table table-bordered text-center text-dark align-middle">
-            <thead class="table-primary">
+      <table class="table table-bordered text-center text-dark align-middle">
+    <thead class="table-primary">
+        <tr>
+            <th>Mã KH</th>
+            <th>Họ và tên</th>
+            <th>Số điện thoại</th>
+            <th>Tình trạng</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        $sql = "SELECT * FROM KhachHang ORDER BY MaKH ASC";
+        $result = $conn->query($sql);
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $ma = htmlspecialchars($row['MaKH']);
+                $ten = htmlspecialchars($row['HoTen']);
+                $sdt = htmlspecialchars($row['SDT']);
+                $tinhtrang = (int)$row['TinhTrang'];
+
+                $badge = $tinhtrang == 1
+                    ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
+                    : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
+
+                echo "
                 <tr>
-                    <th>Mã KH</th>
-                    <th>Họ và tên</th>
-                    <th>Số điện thoại</th>
-                    <th>Tình trạng</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $sql = "SELECT * FROM KhachHang ORDER BY MaKH ASC";
-                $result = $conn->query($sql);
+                    <td>$ma</td>
+                    <td>$ten</td>
+                    <td>$sdt</td>
+                    <td>$badge</td>
+                    <td class='d-flex justify-content-center gap-2'>
+                        <button class='btn btn-warning btn-sm btn-edit' 
+                                data-id='$ma' 
+                                data-ten='$ten' 
+                                data-sdt='$sdt' 
+                                data-tinhtrang='$tinhtrang'>
+                            <i class='fas fa-edit'></i> Sửa
+                        </button>
+                        <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
+                           class='btn btn-danger btn-sm'
+                           onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
+                           🗑️ Xóa
+                        </a>
+                    </td>
+                </tr>";
+            }
+        } else {
+            echo '<tr><td colspan="5">Chưa có khách hàng nào.</td></tr>';
+        }
+        ?>
+    </tbody>
+</table>
 
-                if ($result && $result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        $ma = htmlspecialchars($row['MaKH']);
-                        $ten = htmlspecialchars($row['HoTen']);
-                        $sdt = htmlspecialchars($row['SDT']);
-                        $tinhtrang = (int)$row['TinhTrang'];
-
-$badge = $tinhtrang == 1
-    ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
-    : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
-
-
-                        echo "
-                        <tr>
-                            <td>$ma</td>
-                            <td>$ten</td>
-                            <td>$sdt</td>
-                            <td>$badge</td>
-                            <td>
-                                <button class='btn btn-warning btn-sm btn-edit' 
-                                        data-id='$ma' 
-                                        data-ten='$ten' 
-                                        data-sdt='$sdt' 
-                                        data-tinhtrang='$tinhtrang'>
-                                    <i class='fas fa-edit'></i> Sửa
-                                </button>
-                                <a href='?xoa=$ma' 
-                                   class='btn btn-danger btn-sm btn-delete'>
-                                   <i class='fas fa-trash'></i> Xóa
-                                </a>
-                            </td>
-                        </tr>";
-                    }
-                } else {
-                    echo '<tr><td colspan="5">Chưa có khách hàng nào.</td></tr>';
-                }
-                ?>
-            </tbody>
-        </table>
     </div>
 </div>
 
 <!-- 🔧 Modal Sửa khách hàng -->
-<!-- 🔧 Modal Sửa khách hàng (đẹp hơn, cân đối hơn) -->
 <div class="modal fade" id="modalSuaKhachHang" tabindex="-1" aria-labelledby="modalSuaKhachHangLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
@@ -268,17 +306,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Xác nhận xóa
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const ten = btn.dataset.ten ?? '';
-            const ma = btn.dataset.id ?? '';
-            if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa khách hàng "${ten}" (Mã #${ma}) không?\nNếu khách hàng đã có đơn hàng, hệ thống sẽ không cho phép xóa!`)) {
-                e.preventDefault();
-            }
-        });
-    });
+
 });
+
 </script>
 
 <?php include '../include1/footer.php'; ?>
