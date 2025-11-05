@@ -237,39 +237,72 @@ if(isset($_POST['checkout'])){
             <form method="post">
                 <h5>Thông tin khách hàng</h5>
 
-                <!-- Chọn loại khách hàng -->
-                <div class="mb-3">
-                    <select id="chonLoaiKH" class="form-control" name="chonKH">
-                        <option value="">-- Chọn loại khách hàng --</option>
-                        <option value="moi">Thêm khách hàng mới</option>
-                        <option value="cu">Chọn khách hàng đã lưu</option>
-                    </select>
-                </div>
+<!-- Chọn loại khách hàng -->
+<div class="mb-3">
+    <select id="chonLoaiKH" class="form-control" name="chonKH">
+        <option value="">-- Chọn loại khách hàng --</option>
+        <option value="moi">Thêm khách hàng mới</option>
+        <option value="cu">Chọn khách hàng đã lưu</option>
+    </select>
+</div>
 
-                <!-- Form thêm khách hàng mới -->
-                <div id="formMoi" style="display:none;">
-                    <div class="mb-3">
-                        <input type="text" name="TenKH" placeholder="Tên khách hàng" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <input type="text" name="SDT" placeholder="Số điện thoại" class="form-control">
-                    </div>
-                    
-                </div>
+<!-- Form thêm khách hàng mới -->
+<div id="formMoi" style="display:none;">
+    <div class="mb-3">
+        <input type="text" name="TenKH" id="TenKH_moi" placeholder="Tên khách hàng" class="form-control">
+    </div>
+    <div class="mb-3">
+        <input type="text" name="SDT" id="SDT_moi" placeholder="Số điện thoại" class="form-control">
+    </div>
+</div>
 
-                <!-- Form chọn khách hàng đã lưu -->
-                <div id="formCu" style="display:none;">
-                    <input type="text" id="timKiemKH" class="form-control mb-2" placeholder="Nhập tên hoặc số điện thoại...">
+<!-- Form chọn khách hàng đã lưu -->
+<div id="formCu" style="display:none;">
+    <input type="text" id="timKiemKH" class="form-control mb-2" placeholder="Tìm kiếm khách hàng">
 
-                    <select name="MaKH" id="chonKHSelect" class="form-select" size="5">
-                        <?php
-                        $khRes = mysqli_query($conn, "SELECT * FROM KhachHang ORDER BY HoTen ASC");
-                        while($kh = mysqli_fetch_assoc($khRes)){
-                            echo "<option value='{$kh['MaKH']}'>{$kh['HoTen']} - {$kh['SDT']}</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
+    <select name="MaKH" id="chonKHSelect" class="form-select mb-3" size="5">
+        <?php
+        $khRes = mysqli_query($conn, "SELECT * FROM KhachHang ORDER BY HoTen ASC");
+        while($kh = mysqli_fetch_assoc($khRes)){
+            echo "<option value='{$kh['MaKH']}' data-ten='{$kh['HoTen']}' data-sdt='{$kh['SDT']}'>
+                    {$kh['HoTen']} - {$kh['SDT']}
+                  </option>";
+        }
+        ?>
+    </select>
+
+    <div class="mb-3">
+        <input type="text" name="TenKH" id="TenKH_cu" class="form-control" placeholder="Tên khách hàng" readonly>
+    </div>
+    <div class="mb-3">
+        <input type="text" name="SDT" id="SDT_cu" class="form-control" placeholder="Số điện thoại" readonly>
+    </div>
+</div>
+<script>
+document.getElementById("chonLoaiKH").addEventListener("change", function() {
+    var loai = this.value;
+    document.getElementById("formMoi").style.display = (loai === "moi") ? "block" : "none";
+    document.getElementById("formCu").style.display = (loai === "cu") ? "block" : "none";
+});
+
+// Tìm kiếm khách hàng
+document.getElementById("timKiemKH").addEventListener("keyup", function() {
+    var filter = this.value.toLowerCase();
+    var options = document.getElementById("chonKHSelect").options;
+    for (let i = 0; i < options.length; i++) {
+        let text = options[i].text.toLowerCase();
+        options[i].style.display = text.includes(filter) ? "" : "none";
+    }
+});
+
+// ✅ Khi chọn khách hàng trong danh sách, tự động hiển thị vào input
+document.getElementById("chonKHSelect").addEventListener("change", function() {
+    var selected = this.options[this.selectedIndex];
+    document.getElementById("TenKH_cu").value = selected.getAttribute("data-ten");
+    document.getElementById("SDT_cu").value = selected.getAttribute("data-sdt");
+});
+</script>
+
             </form>
         </div>
     </div>
