@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: ../index.php");
                     exit;
                 } else {
-                    header("Location: ../nhanvien/nhanvien_dashboard.php");
+                    header("Location: ../index1.php");
                     exit;
                 }
             } else {
