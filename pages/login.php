@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Phân quyền
             if ($user['PhanQuyen'] == 'Admin') {
-                header("Location: index.php");
+                header("Location: ../index.php");
                 exit;
             } else {
                 header("Location: nhanvien_dashboard.php");
