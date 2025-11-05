@@ -1,7 +1,6 @@
 <?php
 include '../db/connect.php';
-include '../include1/header.php';
-include '../include1/sidebar.php'; 
+
 
 // ==========================
 // Kiểm tra mã đơn hàng
