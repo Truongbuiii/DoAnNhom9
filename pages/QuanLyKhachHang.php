@@ -242,6 +242,7 @@ if (isset($_GET['khoa'])) {
               <option value="0">Khóa</option>
             </select>
           </div>
+          
         </div>
 
         <!-- Footer -->
