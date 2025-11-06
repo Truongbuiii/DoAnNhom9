@@ -11,17 +11,18 @@ if (isset($_GET['xoa'])) {
     $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");
 
     if ($kiemTra && $kiemTra->num_rows > 0) {
-        // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
-        echo "
-        <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
-            <h5>🚫 Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
-            <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
-            <div class='d-flex justify-content-center gap-2 mt-3'>
-                <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
-                <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
+                // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
+            echo "
+            <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
+                <h5>🚫 Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
+                <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
+                <div class='d-flex justify-content-center gap-2 mt-3'>
+                    <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
+                    <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
+                </div>
             </div>
-        </div>
-        ";
+            ";
+
     } else {
         // Không có đơn hàng → xóa luôn
         if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
