@@ -117,6 +117,7 @@ $result = $conn->query($sql);
         </div>
       </div>
 
+      
       <div class="modal-footer">
         <button type="submit" class="btn btn-success">Lưu nhân viên</button>
       </div>
