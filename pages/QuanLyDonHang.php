@@ -1,22 +1,39 @@
 <?php include '../include1/header.php'; ?>
 <?php include '../include/sidebar.php'; ?>
 <?php
-// Kết nối database
-include '../db/connect.php';
-
-// Xử lý tìm kiếm
 $search = "";
 if (isset($_GET['search']) && $_GET['search'] != "") {
-    $search = $_GET['search'];
-    $sql = "SELECT * FROM donhang 
-            WHERE MaDon LIKE '%$search%' OR MaKH LIKE '%$search%'
-            ORDER BY NgayLap DESC";
+    $search = $conn->real_escape_string($_GET['search']);
+    $sql = "
+        SELECT dh.MaDon, dh.NgayLap, dh.TongTien,
+               kh.HoTen AS TenKH,
+               nv.HoTen AS TenNV
+        FROM DonHang dh
+        LEFT JOIN KhachHang kh ON dh.MaKH = kh.MaKH
+        LEFT JOIN NhanVien nv ON dh.MaNV = nv.MaNV
+        WHERE dh.MaDon LIKE '%$search%' 
+           OR kh.HoTen LIKE '%$search%' 
+           OR nv.HoTen LIKE '%$search%'
+        ORDER BY dh.NgayLap DESC
+    ";
 } else {
-    $sql = "SELECT * FROM donhang ORDER BY NgayLap DESC";
+    $sql = "
+        SELECT dh.MaDon, dh.NgayLap, dh.TongTien,
+               kh.HoTen AS TenKH,
+               nv.HoTen AS TenNV
+        FROM DonHang dh
+        LEFT JOIN KhachHang kh ON dh.MaKH = kh.MaKH
+        LEFT JOIN NhanVien nv ON dh.MaNV = nv.MaNV
+        ORDER BY dh.NgayLap DESC
+    ";
 }
 
 $result = $conn->query($sql);
+if ($result === false) {
+    echo "<div class='alert alert-danger'>Lỗi SQL: " . htmlspecialchars($conn->error) . "</div>";
+}
 ?>
+
 
 <div id="content-wrapper" class="d-flex flex-column">
   <div id="content">
@@ -56,40 +73,48 @@ $result = $conn->query($sql);
 
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered text-center table-hover">
-              <thead class="bg-primary text-white">
-                <tr>
-                  <th>Mã đơn</th>
-                  <th>Ngày lập</th>
-                  <th>Tổng tiền</th>
-                  <th>Mã KH</th>
-                  <th>Mã NV</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-                if ($result && $result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        echo "<tr>";
-                        echo "<td>{$row['MaDon']}</td>";
-                        echo "<td>" . date('d/m/Y', strtotime($row['NgayLap'])) . "</td>";
-                        echo "<td><b>" . number_format($row['TongTien'], 0, ',', '.') . " ₫</b></td>";
-                        echo "<td>{$row['MaKH']}</td>";
-                        echo "<td>{$row['MaNV']}</td>";
-                        echo "<td>
-                                <button class='btn btn-info btn-sm btn-detail' data-id='{$row['MaDon']}'>
-                                  <i class='fas fa-eye'></i> Xem
-                                </button>
-                              </td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='6'>Không có đơn hàng nào!</td></tr>";
-                }
-                ?>
-              </tbody>
-            </table>
+  <table class="table table-bordered text-center table-hover">
+  <thead class="bg-primary text-white">
+    <tr>
+      <th>Mã đơn</th>
+      <th>Ngày lập</th>
+      <th>Tổng tiền</th>
+      <th>Khách hàng</th>
+      <th>Nhân viên</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            // dùng toán tử null-coalescing để tránh "undefined index"
+            $maDon = htmlspecialchars($row['MaDon'] ?? '');
+            $ngayLap = !empty($row['NgayLap']) ? date('d/m/Y', strtotime($row['NgayLap'])) : '';
+            $tong = isset($row['TongTien']) ? number_format($row['TongTien'], 0, ',', '.') . ' ₫' : '';
+            $tenKH = htmlspecialchars($row['TenKH'] ?? '—');
+            $tenNV = htmlspecialchars($row['TenNV'] ?? '—');
+
+            echo "<tr>
+                    <td>{$maDon}</td>
+                    <td>{$ngayLap}</td>
+                    <td><b>{$tong}</b></td>
+                    <td>{$tenKH}</td>
+                    <td>{$tenNV}</td>
+                    <td>
+                      <button class='btn btn-info btn-sm btn-detail' data-id='{$maDon}'>
+                        <i class='fas fa-eye'></i> Xem
+                      </button>
+                    </td>
+                  </tr>";
+        }
+    } else {
+        echo "<tr><td colspan='6'>Không có đơn hàng nào!</td></tr>";
+    }
+    ?>
+  </tbody>
+</table>
+
           </div>
         </div>
       </div>
