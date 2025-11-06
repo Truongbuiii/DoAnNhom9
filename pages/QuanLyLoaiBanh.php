@@ -1,10 +1,122 @@
-<?php include '../include1/header.php'; ?>
-<?php include '../include1/sidebar.php'; ?>
+<?php
+// QuanLyLoaiBanh.php
+include '../include1/header.php';
+include '../include1/sidebar.php';
 
+// NOTE: giả sử $conn đã được tạo trong include '../db/connect.php' hoặc header.
+// Nếu chưa, bạn cần include file kết nối DB trước khi dùng $conn.
+
+// ======== XỬ LÝ THÊM LOẠI BÁNH ========
+if (isset($_POST['them'])) {
+    $tenLoai = $conn->real_escape_string(trim($_POST['tenLoai']));
+    $sqlThem = "INSERT INTO LoaiBanh (TenLoaiBanh, TinhTrang) VALUES ('$tenLoai', 1)";
+    if ($conn->query($sqlThem)) {
+        echo "<script>window.location='QuanLyLoaiBanh.php';</script>";
+        exit;
+    } else {
+        $errMsg = "Lỗi khi thêm: " . htmlspecialchars($conn->error);
+    }
+}
+
+// ======== XỬ LÝ LƯU SỬA ========
+if (isset($_POST['luu_sua'])) {
+    $ma = intval($_POST['sua_ma']);
+    $ten = $conn->real_escape_string(trim($_POST['sua_ten']));
+    $tinhtrang = intval($_POST['sua_tinhtrang']);
+
+    $sql = "UPDATE LoaiBanh SET TenLoaiBanh='$ten', TinhTrang=$tinhtrang WHERE MaLoaiBanh=$ma";
+    if ($conn->query($sql)) {
+        echo "<script>window.location='QuanLyLoaiBanh.php';</script>";
+        exit;
+    } else {
+        $errMsg = "Lỗi khi cập nhật: " . htmlspecialchars($conn->error);
+    }
+}
+
+// ======== XỬ LÝ XÓA HOẶC HIỂN THỊ HỘP KHÓA ========
+if (isset($_GET['xoa'])) {
+    $ma = intval($_GET['xoa']);
+    $ten = urldecode($_GET['ten'] ?? '');
+
+    // Kiểm tra có sản phẩm thuộc loại này không
+    $sqlCheckSP = "SELECT COUNT(*) AS TongSP FROM ThongTinBanh WHERE MaLoaiBanh = $ma";
+    $resSP = $conn->query($sqlCheckSP);
+    $tongSP = 0;
+    if ($resSP) {
+        $tongSP = (int)$resSP->fetch_assoc()['TongSP'];
+    }
+
+    // Hiển thị overlay + popup (khóa hoặc xóa)
+    echo "<style>
+        /* overlay + popup tạm thời (chỉ khi cần) */
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; animation: fadeIn .25s ease; }
+        .popup { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(1); background: #fff; border-radius:10px; padding:28px 30px; z-index:1055; box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align:center; animation: popupShow .25s ease; }
+        .popup h5 { margin-bottom:12px; }
+        .btn-popup { padding:8px 18px; border-radius:6px; }
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+        @keyframes popupShow { from { transform: translate(-50%,-50%) scale(.92); opacity:0 } to { transform: translate(-50%,-50%) scale(1); opacity:1 } }
+    </style>";
+
+    echo "<div id='overlay'></div>";
+
+    if ($tongSP > 0) {
+        // Có sản phẩm -> hỏi khóa
+        $tenEsc = htmlspecialchars($ten);
+        echo "
+        <div class='popup'>
+            <h5>⚠️ Loại bánh \"{$tenEsc}\" hiện đang có sản phẩm!</h5>
+            <p>Bạn có muốn <b>ẩn (khóa)</b> loại bánh này không?</p>
+            <div class='d-flex justify-content-center gap-2 mt-3'>
+                <a href='QuanLyLoaiBanh.php?khoa={$ma}' class='btn btn-warning btn-popup'>Khóa</a>
+                <a href='QuanLyLoaiBanh.php' class='btn btn-secondary btn-popup'>Hủy</a>
+            </div>
+        </div>";
+    } else {
+        // Không có sản phẩm -> xóa luôn
+        if ($conn->query("DELETE FROM LoaiBanh WHERE MaLoaiBanh = $ma")) {
+            echo "
+            <div id='overlay'></div>
+            <div class='popup' style='background:#198754;color:#fff;'>
+                ✅ Đã xóa loại bánh thành công!
+            </div>
+            <script>setTimeout(()=> window.location.href='QuanLyLoaiBanh.php', 1000);</script>";
+        } else {
+            echo "
+            <div id='overlay'></div>
+            <div class='popup' style='background:#dc3545;color:#fff;'>
+                ❌ Lỗi khi xóa: " . htmlspecialchars($conn->error) . "
+            </div>";
+        }
+    }
+    // Dừng tiếp tục render phần dưới để tránh hiển thị giao diện gốc chồng lên popup
+    exit;
+}
+
+// ======== XỬ LÝ KHÓA ========
+if (isset($_GET['khoa'])) {
+    $ma = intval($_GET['khoa']);
+    if ($conn->query("UPDATE LoaiBanh SET TinhTrang = 0 WHERE MaLoaiBanh = $ma")) {
+        echo "<style>#overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; }</style>";
+        echo "<div id='overlay'></div>";
+        echo "<div style='position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1055; background:#ffc107; padding:20px 26px; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,0.25);'>🔒 Đã khóa loại bánh thành công!</div>";
+        echo "<script>setTimeout(()=> window.location.href='QuanLyLoaiBanh.php', 1000);</script>";
+        exit;
+    } else {
+        echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi khóa loại bánh: " . htmlspecialchars($conn->error) . "</div>";
+    }
+}
+?>
+
+<!-- Begin Page Content -->
 <div class="container-fluid">
     <h2 class="text-center mb-4 text-primary">Quản lý loại bánh</h2>
 
-    <!-- 🟢 Form thêm loại bánh -->
+    <!-- Hiển thị lỗi (nếu có) -->
+    <?php if (!empty($errMsg)) : ?>
+        <div class="alert alert-danger"><?php echo $errMsg; ?></div>
+    <?php endif; ?>
+
+    <!-- Form thêm loại bánh -->
     <div class="card mb-4 shadow-sm p-4">
         <h5 class="mb-3 text-primary">Thêm loại bánh</h5>
         <form method="POST" action="">
@@ -20,58 +132,7 @@
         </form>
     </div>
 
-    <?php
-    // 🟢 Thêm loại bánh
-    if (isset($_POST['them'])) {
-        $tenLoai = trim($_POST['tenLoai']);
-        $sqlThem = "INSERT INTO LoaiBanh (TenLoaiBanh, TinhTrang) VALUES ('$tenLoai', 1)";
-        if ($conn->query($sqlThem)) {
-            echo "<script>alert('🎉 Thêm loại bánh mới thành công!'); window.location='QuanLyLoaiBanh.php';</script>";
-        } else {
-            echo "<div class='alert alert-danger mt-3'>Lỗi: " . $conn->error . "</div>";
-        }
-    }
-
-    // ✏️ Sửa loại bánh
-    if (isset($_POST['luu_sua'])) {
-        $ma = intval($_POST['sua_ma']);
-        $ten = trim($_POST['sua_ten']);
-        $tinhtrang = intval($_POST['sua_tinhtrang']);
-
-        $sql = "UPDATE LoaiBanh SET TenLoaiBanh='$ten', TinhTrang=$tinhtrang WHERE MaLoaiBanh=$ma";
-        if ($conn->query($sql)) {
-            echo "<script>alert('✅ Cập nhật loại bánh thành công!'); window.location='QuanLyLoaiBanh.php';</script>";
-        } else {
-            echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi: " . $conn->error . "</div>";
-        }
-    }
-
-   // 🗑️ Xóa hoặc khóa loại bánh
-if (isset($_GET['xoa'])) {
-    $ma = intval($_GET['xoa']);
-
-    // Kiểm tra loại bánh này có sản phẩm nào không
-    $sqlCheckSP = "SELECT COUNT(*) AS TongSP FROM ThongTinBanh WHERE MaLoaiBanh = $ma";
-    $resSP = $conn->query($sqlCheckSP);
-    $tongSP = $resSP->fetch_assoc()['TongSP'];
-
-    if ($tongSP > 0) {
-        // Có sản phẩm thuộc loại này → chỉ khóa, không xóa
-        $conn->query("UPDATE LoaiBanh SET TinhTrang = 0 WHERE MaLoaiBanh = $ma");
-        echo "<script>alert('⚠️ Loại bánh này đã có sản phẩm bán, nên chỉ bị khóa chứ không thể xóa!'); window.location='QuanLyLoaiBanh.php';</script>";
-    } else {
-        // Không có sản phẩm → cho phép xóa
-        if ($conn->query("DELETE FROM LoaiBanh WHERE MaLoaiBanh = $ma")) {
-            echo "<script>alert('🗑️ Đã xóa loại bánh thành công!'); window.location='QuanLyLoaiBanh.php';</script>";
-        } else {
-            echo "<div class='alert alert-danger mt-3'>❌ Lỗi khi xóa: " . $conn->error . "</div>";
-        }
-    }
-}
-
-    ?>
-
-    <!-- 📋 Danh sách loại bánh -->
+    <!-- Danh sách loại bánh -->
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="mb-3 text-primary">Danh sách loại bánh</h5>
         <table class="table table-bordered text-center align-middle">
@@ -89,7 +150,7 @@ if (isset($_GET['xoa'])) {
                 $result = $conn->query($sql);
                 if ($result && $result->num_rows > 0) {
                     while ($loai = $result->fetch_assoc()) {
-                        $ma = htmlspecialchars($loai['MaLoaiBanh']);
+                        $ma = (int)$loai['MaLoaiBanh'];
                         $ten = htmlspecialchars($loai['TenLoaiBanh']);
                         $tinhtrang = (int)$loai['TinhTrang'];
 
@@ -97,20 +158,24 @@ if (isset($_GET['xoa'])) {
                             ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
                             : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
 
+                        // Nút sửa sẽ dùng data-* để mở modal
                         echo "
                         <tr>
-                            <td>$ma</td>
-                            <td>$ten</td>
-                            <td>$badge</td>
+                            <td>{$ma}</td>
+                            <td>{$ten}</td>
+                            <td>{$badge}</td>
                             <td>
-                                <button class='btn btn-warning btn-sm btn-edit'
-                                        data-id='$ma'
-                                        data-ten='$ten'
-                                        data-tinhtrang='$tinhtrang'>
+                                <button class='btn btn-warning btn-sm btn-edit me-2'
+                                        data-id='{$ma}'
+                                        data-ten=\"" . htmlspecialchars($loai['TenLoaiBanh'], ENT_QUOTES) . "\"
+                                        data-tinhtrang='{$tinhtrang}'>
                                     <i class='fas fa-edit'></i> Sửa
                                 </button>
-                                <a href='?xoa=$ma' class='btn btn-danger btn-sm'
-                                   onclick='return confirm(\"⚠️ Bạn có chắc muốn xóa loại bánh này không?\")'>Xóa</a>
+                                <a href='QuanLyLoaiBanh.php?xoa={$ma}&ten=" . urlencode($loai['TenLoaiBanh']) . "' 
+                                   class='btn btn-danger btn-sm'
+                                   onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa loại bánh " . addslashes($loai['TenLoaiBanh']) . " không?\")'>
+                                   🗑️ Xóa
+                                </a>
                             </td>
                         </tr>";
                     }
@@ -123,7 +188,7 @@ if (isset($_GET['xoa'])) {
     </div>
 </div>
 
-<!-- 🔧 Modal Sửa loại bánh -->
+<!-- Modal Sửa loại bánh -->
 <div class="modal fade" id="modalSuaLoaiBanh" tabindex="-1" aria-labelledby="modalSuaLoaiBanhLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
@@ -161,21 +226,7 @@ if (isset($_GET['xoa'])) {
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modalSua = new bootstrap.Modal(document.getElementById('modalSuaLoaiBanh'));
-
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('sua_ma').value = btn.dataset.id;
-            document.getElementById('sua_ten').value = btn.dataset.ten;
-            document.getElementById('sua_tinhtrang').value = btn.dataset.tinhtrang;
-            modalSua.show();
-        });
-    });
-});
-</script>
-
+<!-- Styles nhỏ cho form -->
 <style>
 .form-select, .form-control {
   font-size: 15px;
@@ -189,5 +240,27 @@ document.addEventListener('DOMContentLoaded', function () {
   box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
 }
 </style>
+
+<!-- Script: mở modal sửa và gán dữ liệu -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('modalSuaLoaiBanh');
+    const modal = new bootstrap.Modal(modalEl);
+
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const ten = btn.dataset.ten;
+            const tinhtrang = btn.dataset.tinhtrang;
+
+            document.getElementById('sua_ma').value = id;
+            document.getElementById('sua_ten').value = ten;
+            document.getElementById('sua_tinhtrang').value = tinhtrang;
+
+            modal.show();
+        });
+    });
+});
+</script>
 
 <?php include '../include1/footer.php'; ?>
