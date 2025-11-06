@@ -119,7 +119,7 @@ $result = $conn->query($sql);
 
       
       <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Lưu nhân viên</button>
+        <button type="submit" class="btn btn-success">Lưu</button>
       </div>
     </form>
   </div>
@@ -170,7 +170,7 @@ $result = $conn->query($sql);
       </div>
 
       <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+        <button type="submit" class="btn btn-success">Lưu </button>
       </div>
     </form>
   </div>
