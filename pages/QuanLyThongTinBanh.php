@@ -127,8 +127,22 @@ if (isset($_GET['khoa'])) {
 
     <?php if (!empty($errMsg)) echo "<div class='alert alert-danger'>$errMsg</div>"; ?>
 
-    <div class="card shadow-sm p-4">
-        <h5 class="text-primary mb-3">Danh sách bánh</h5>
+  <div class="card shadow-sm p-4">
+  <h5 class="text-primary mb-3">Danh sách bánh</h5>
+
+              <form method="GET" class="mb-3 d-flex align-items-center">
+    <input type="text" name="search" 
+                class="form-control w-50 mr-3" 
+           placeholder="Tìm theo tên bánh hoặc loại bánh..."
+           value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+          <button class="btn btn-primary mr-2" type="submit">
+      <i class="fas fa-search"></i> Tìm
+    </button>
+    <a href="QuanLyThongTinBanh.php" class="btn btn-secondary">
+      <i class="fas fa-undo"></i> Làm mới
+    </a>
+  </form>
+
         <table class="table table-bordered text-center align-middle">
             <thead class="table-primary">
                 <tr>
@@ -144,10 +158,18 @@ if (isset($_GET['khoa'])) {
             </thead>
             <tbody>
             <?php
-            $sql = "SELECT tb.*, lb.TenLoaiBanh 
-                    FROM ThongTinBanh tb
-                    JOIN LoaiBanh lb ON tb.MaLoaiBanh = lb.MaLoaiBanh
-                    ORDER BY tb.MaBanh ASC";
+          $search = $conn->real_escape_string($_GET['search'] ?? '');
+
+$sql = "SELECT tb.*, lb.TenLoaiBanh 
+        FROM ThongTinBanh tb
+        JOIN LoaiBanh lb ON tb.MaLoaiBanh = lb.MaLoaiBanh";
+
+if ($search !== '') {
+    $sql .= " WHERE tb.TenBanh LIKE '%$search%' OR lb.TenLoaiBanh LIKE '%$search%'";
+}
+
+$sql .= " ORDER BY tb.MaBanh ASC";
+
             $res = $conn->query($sql);
             if ($res && $res->num_rows > 0) {
                 while ($row = $res->fetch_assoc()) {
