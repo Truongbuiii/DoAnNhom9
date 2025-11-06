@@ -81,11 +81,6 @@ $result = $conn->query($sql);
                                 <button class='btn btn-info btn-sm btn-detail' data-id='{$row['MaDon']}'>
                                   <i class='fas fa-eye'></i> Xem
                                 </button>
-                                <a href='donhang_delete.php?MaDon={$row['MaDon']}' 
-                                   class='btn btn-danger btn-sm'
-                                   onclick='return confirm(\"Bạn có chắc muốn xóa đơn hàng này không?\")'>
-                                   <i class='fas fa-trash'></i> Xóa
-                                </a>
                               </td>";
                         echo "</tr>";
                     }
