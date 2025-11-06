@@ -1,9 +1,7 @@
-<?php
+<?php include 'include/header.php'; ?>
+<?php include 'include/sidebar.php'; ?>
 
-// Nếu đã đăng nhập, tiếp tục load index bình thường
-include 'include/header.php';
-include 'include/sidebar.php';
-?>
+      
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
@@ -109,7 +107,7 @@ if(isset($_POST['checkout'])){
     mysqli_query($conn,"UPDATE DonHang SET TongTien=$tongTien WHERE MaDon=$maDon");
 
     unset($_SESSION['cart']);
-    echo "<script>alert('Thanh toán thành công!'); window.location='banhang.php';</script>";
+    echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
 }
 
 // ==========================
@@ -181,13 +179,15 @@ if(isset($_POST['checkout'])){
             document.getElementById('SDT').value = '';
             document.getElementById('MaKH').value = '';
         });
-        window.location='banhang.php';
+        window.location='index.php';
     </script>";
 }
 
 ?>
 
 <style>
+/* ✅ Thanh cuộn cho khu vực sản phẩm */
+./* ✅ Thanh cuộn dọc cho danh sách sản phẩm */
 .product-scroll {
     max-height: 520px;       /* chiều cao cố định vùng sản phẩm */
     overflow-y: auto;        /* bật thanh cuộn dọc */

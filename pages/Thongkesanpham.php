@@ -78,7 +78,3 @@ if ($loai) {
 
 </div>
 
-<?php
-mysqli_close($conn);
-include '../include1/footer.php';
-?>

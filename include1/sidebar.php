@@ -24,7 +24,6 @@
     <i class="fas fa-cash-register fa-sm text-white-50"></i> Bán hàng
 </a>
 
-</a>
     </li>
 
 
