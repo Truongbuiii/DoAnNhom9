@@ -42,13 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['PhanQuyen'] = $user['PhanQuyen'];
 
                 // Phân quyền
-                if ($user['PhanQuyen'] == 'Admin') {
-                    header("Location: ../index.php");
-                    exit;
-                } else {
-                    header("Location: ../index1.php");
-                    exit;
-                }
+               header("Location: ../index.php");
+exit;
+
             } else {
                 echo "<script>alert('Sai tên đăng nhập hoặc mật khẩu!');</script>";
             }

@@ -77,6 +77,12 @@ $result = $conn->query($sql);
     <?php endif; ?>
 </div>
 
-<a href="ThongKeDoanhThu.php" class="btn btn-secondary">⬅ Quay lại thống kê</a>
+
+
+<!-- Nút quay lại căn giữa -->
+<div style="text-align: center; margin-top: 20px;">
+    <button class="btn btn-secondary" onclick="history.back()">Quay lại</button>
+</div>
+
 
 <?php include '../include1/footer.php'; ?>

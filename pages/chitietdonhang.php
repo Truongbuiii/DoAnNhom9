@@ -80,5 +80,13 @@ $chiTiet = $conn->query($sqlChiTiet);
     </table>
 
     <br>
-    <a href="chitietdoanhthu.php" class="btn btn-secondary">⬅ Quay lại danh sách đơn hàng</a>
+
+<!-- Nút quay lại căn giữa -->
+<div style="text-align: center; margin-top: 20px;">
+    <button class="btn btn-secondary" onclick="history.back()">Quay lại</button>
+</div>
+
+<?php include '../include1/footer.php'; ?>
+
+
 </div>
