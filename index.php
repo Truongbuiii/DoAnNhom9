@@ -1,19 +1,9 @@
 <?php
 
-
-// Kiểm tra đăng nhập
-if (!isset($_SESSION['MaNV'])) {
-    header("Location: pages/login.php"); // kiểm tra lại đúng thư mục
-    exit;
-}
-
+// Nếu đã đăng nhập, tiếp tục load index bình thường
 include 'include/header.php';
 include 'include/sidebar.php';
 ?>
-
-
-
-      
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
