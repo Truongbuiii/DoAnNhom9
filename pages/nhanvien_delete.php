@@ -1,32 +1,57 @@
 <?php
- include '../db/connect.php'; 
+include '../db/connect.php';
 
 if (isset($_GET['MaNV'])) {
-    $MaNV = $_GET['MaNV'];
+    $maNV = intval($_GET['MaNV']);
 
-    // Kiểm tra xem nhân viên có đơn hàng không
-    $check = $conn->prepare("SELECT COUNT(*) FROM donhang WHERE MaNV = ?");
-    $check->bind_param("i", $MaNV);
-    $check->execute();
-    $check->bind_result($count);
-    $check->fetch();
-    $check->close();
+    // ✅ Kiểm tra nhân viên có trong bảng Đơn Hàng không
+    $sqlCheck = "SELECT COUNT(*) AS SoLuong FROM DonHang WHERE MaNV = ?";
+    $stmtCheck = $conn->prepare($sqlCheck);
 
-    if ($count > 0) {
-        echo "<script>alert('⚠️ Nhân viên này đang có đơn hàng, không thể xóa!'); window.location='QuanLyNhanVien.php';</script>";
-        exit();
+    if (!$stmtCheck) {
+        die("❌ Lỗi prepare SQL: " . $conn->error);
     }
 
-    // Nếu không có đơn hàng thì xóa
-    $sql = "DELETE FROM nhanvien WHERE MaNV = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $MaNV);
+    $stmtCheck->bind_param("i", $maNV);
+    $stmtCheck->execute();
+    $resultCheck = $stmtCheck->get_result();
+    $row = $resultCheck->fetch_assoc();
+    $coDonHang = ($row && $row['SoLuong'] > 0);
 
-    if ($stmt->execute()) {
-        echo "<script>alert('✅ Xóa nhân viên thành công!'); window.location='QuanLyNhanVien.php';</script>";
+    if ($coDonHang) {
+        // ✅ Nếu có đơn hàng → chỉ khóa nhân viên
+        $sqlKhoa = "UPDATE NhanVien SET TinhTrang = 0 WHERE MaNV = ?";
+        $stmtKhoa = $conn->prepare($sqlKhoa);
+        $stmtKhoa->bind_param("i", $maNV);
+
+        if ($stmtKhoa->execute()) {
+            echo "<script>
+                    alert('⚠️ Nhân viên này đã có lịch sử đơn hàng nên chỉ bị KHÓA, không thể xóa!');
+                    window.location.href='QuanLyNhanVien.php';
+                  </script>";
+        } else {
+            echo "<script>
+                    alert('❌ Lỗi khi khóa nhân viên!');
+                    window.location.href='QuanLyNhanVien.php';
+                  </script>";
+        }
     } else {
-        echo "<script>alert('❌ Lỗi khi xóa nhân viên!'); window.location='QuanLyNhanVien.php';</script>";
+        // ✅ Nếu chưa có đơn hàng → xóa hoàn toàn
+        $sqlXoa = "DELETE FROM NhanVien WHERE MaNV = ?";
+        $stmtXoa = $conn->prepare($sqlXoa);
+        $stmtXoa->bind_param("i", $maNV);
+
+        if ($stmtXoa->execute()) {
+            echo "<script>
+                    alert('🗑️ Đã xóa nhân viên thành công!');
+                    window.location.href='QuanLyNhanVien.php';
+                  </script>";
+        } else {
+            echo "<script>
+                    alert('❌ Lỗi khi xóa nhân viên!');
+                    window.location.href='QuanLyNhanVien.php';
+                  </script>";
+        }
     }
 }
-$conn->close();
 ?>
