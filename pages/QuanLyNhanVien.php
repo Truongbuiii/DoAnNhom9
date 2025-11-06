@@ -3,82 +3,80 @@
 <?php
 include '../db/connect.php';
 
-
 // Lấy danh sách nhân viên
 $sql = "SELECT * FROM nhanvien";
 $result = $conn->query($sql);
 ?>
 
+<!-- Nội dung chính -->
+<div class="container-fluid">
+  <h1 class="h3 mb-2 text-gray-800">Quản lý nhân viên</h1>
 
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
+      <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addModal">+ Thêm nhân viên</button>
+    </div>
 
-    <!-- Nội dung chính -->
-    <div class="container-fluid">
-      <h1 class="h3 mb-2 text-gray-800">Quản lý nhân viên</h1>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered text-center">
+          <thead class="bg-primary text-white">
+            <tr>
+              <th>Mã NV</th>
+              <th>Tên đăng nhập</th>
+              <th>Họ tên</th>
+              <th>Mật khẩu</th>
+              <th>Phân quyền</th>
+              <th>Tình trạng</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            if ($result->num_rows > 0) {
+              while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>{$row['MaNV']}</td>";
+                echo "<td>{$row['TenDangNhap']}</td>";
+                echo "<td>{$row['HoTen']}</td>";
+                echo "<td>{$row['MatKhau']}</td>";
 
-      <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-          <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
-          <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addModal">+ Thêm nhân viên</button>
-        </div>
+                // Phân quyền
+                echo "<td><span class='badge " .
+                  ($row['PhanQuyen'] == 'Admin' ? "badge-danger" : "badge-secondary") .
+                  "'>{$row['PhanQuyen']}</span></td>";
 
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-bordered text-center">
-              <thead class="bg-primary text-white">
-                <tr>
-                  <th>Mã NV</th>
-                  <th>Tên đăng nhập</th>
-                  <th>Họ tên</th>
-                  <th>Mật khẩu</th>
-                  <th>Phân quyền</th>
-                  <th>Tình trạng</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-              if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        echo "<tr>";
-        echo "<td>{$row['MaNV']}</td>";
-        echo "<td>{$row['TenDangNhap']}</td>";
-        echo "<td>{$row['HoTen']}</td>";
-        echo "<td>{$row['MatKhau']}</td>";
-        echo "<td><span class='badge " .
-             ($row['PhanQuyen'] == 'Admin' ? "badge-danger" : "badge-secondary") .
-             "'>{$row['PhanQuyen']}</span></td>";
+                // ✅ Tình trạng hiển thị đẹp
+                echo "<td><span class='badge " .
+                  ($row['TinhTrang'] == 1 ? "badge-success'>Mở" : "badge-danger'>Khóa") .
+                  "</span></td>";
 
-        // ✅ Thêm tình trạng hiển thị đẹp
-        echo "<td><span class='badge " . 
-             ($row['TinhTrang'] == 1 ? "badge-success'>Mở" : "badge-danger'>Khóa") . 
-             "</span></td>";
-
-        echo "<td>
-                <button class='btn btn-warning btn-sm btn-edit'
-                    data-id='{$row['MaNV']}'
-                    data-tendangnhap='{$row['TenDangNhap']}'
-                    data-hoten='{$row['HoTen']}'
-                    data-matkhau='{$row['MatKhau']}'
-                    data-phanquyen='{$row['PhanQuyen']}'
-                    <i class='fas fa-edit'></i> Sửa
-                </button>
-                <a href='nhanvien_delete.php?MaNV={$row['MaNV']}'
-                   class='btn btn-danger btn-sm'
-                   onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
-                   <i class='fas fa-trash'></i> Xóa
-                </a>
-              </td>";
-        echo "</tr>";
-    }
-} else {
-    echo "<tr><td colspan='7'>Không có nhân viên nào!</td></tr>";
-}
-
-                ?>
-              </tbody>
-            </table>
-          </div>
-        </div>
+                // Nút hành động
+                echo "<td>
+                        <button class='btn btn-warning btn-sm btn-edit'
+                            data-id='{$row['MaNV']}'
+                            data-tendangnhap='{$row['TenDangNhap']}'
+                            data-hoten='{$row['HoTen']}'
+                            data-matkhau='{$row['MatKhau']}'
+                            data-phanquyen='{$row['PhanQuyen']}'
+                            data-tinhtrang='{$row['TinhTrang']}'>
+                            <i class='fas fa-edit'></i> Sửa
+                        </button>
+                        <a href='nhanvien_delete.php?MaNV={$row['MaNV']}'
+                           class='btn btn-danger btn-sm'
+                           onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
+                           <i class='fas fa-trash'></i> Xóa
+                        </a>
+                      </td>";
+                echo "</tr>";
+              }
+            } else {
+              echo "<tr><td colspan='7'>Không có nhân viên nào!</td></tr>";
+            }
+            ?>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -108,13 +106,15 @@ $result = $conn->query($sql);
           <label class="form-label">Mật khẩu (6 số)</label>
           <input type="text" class="form-control" name="MatKhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
+
         <div class="mb-3">
-                  <label class="form-label">Tình trạng</label>
-                  <select name="tinhtrang" class="form-select">
-                    <option value="1">Mở</option>
-                    <option value="0">Khóa</option>
-                  </select>
-                </div>
+          <label class="form-label">Tình trạng</label>
+          <select name="tinhtrang" class="form-select">
+            <option value="1">Mở</option>
+            <option value="0">Khóa</option>
+          </select>
+        </div>
+
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
           <select name="PhanQuyen" class="form-select">
@@ -157,13 +157,15 @@ $result = $conn->query($sql);
           <label class="form-label">Mật khẩu (6 số)</label>
           <input type="text" class="form-control" name="MatKhau" id="edit-matkhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
-      <div class="mb-3">
-                  <label class="form-label">Tình trạng</label>
-                  <select name="tinhtrang" class="form-select">
-                    <option value="1">Mở</option>
-                    <option value="0">Khóa</option>
-                  </select>
-                </div>
+
+        <div class="mb-3">
+          <label class="form-label">Tình trạng</label>
+          <select name="tinhtrang" id="edit-tinhtrang" class="form-select">
+            <option value="1">Mở</option>
+            <option value="0">Khóa</option>
+          </select>
+        </div>
+
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
           <select name="PhanQuyen" id="edit-phanquyen" class="form-select">
@@ -187,7 +189,7 @@ $result = $conn->query($sql);
       document.getElementById('edit-id').value = button.dataset.id;
       document.getElementById('edit-tendangnhap').value = button.dataset.tendangnhap;
       document.getElementById('edit-hoten').value = button.dataset.hoten;
-      document.getElementById('edit-matkhau').value = button.dataset.matkhau; // ✅ giữ nguyên mật khẩu hiện tại
+      document.getElementById('edit-matkhau').value = button.dataset.matkhau;
       document.getElementById('edit-tinhtrang').value = button.dataset.tinhtrang;
       document.getElementById('edit-phanquyen').value = button.dataset.phanquyen;
       $('#editModal').modal('show');

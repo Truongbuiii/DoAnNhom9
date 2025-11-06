@@ -1,13 +1,12 @@
 <?php
- include '../db/connect.php'; 
-
+include '../db/connect.php';
 
 if (isset($_POST['MaNV'])) {
     $MaNV = $_POST['MaNV'];
     $TenDangNhap = $_POST['TenDangNhap'];
     $HoTen = $_POST['HoTen'];
     $MatKhau = $_POST['MatKhau'];
-    $TinhTrang = $_POST['TinhTrang'];
+    $TinhTrang = $_POST['tinhtrang']; // 🟢 đúng tên field trong form
     $PhanQuyen = $_POST['PhanQuyen'];
 
     // ✅ Kiểm tra mật khẩu hợp lệ (6 chữ số)
@@ -16,7 +15,7 @@ if (isset($_POST['MaNV'])) {
         exit;
     }
 
-    // ✅ Kiểm tra tên đăng nhập trùng (trừ chính nhân viên đang sửa)
+    // ✅ Kiểm tra trùng tên đăng nhập (trừ nhân viên hiện tại)
     $checkUser = $conn->prepare("SELECT MaNV FROM nhanvien WHERE TenDangNhap=? AND MaNV<>?");
     $checkUser->bind_param("si", $TenDangNhap, $MaNV);
     $checkUser->execute();
@@ -27,15 +26,23 @@ if (isset($_POST['MaNV'])) {
         exit;
     }
 
-    // ✅ Cập nhật thông tin
-    $sql = "UPDATE nhanvien SET HoTen=?, MatKhau=?, PhanQuyen=? WHERE MaNV=?";
+    // ✅ Cập nhật thông tin nhân viên
+    $sql = "UPDATE nhanvien 
+            SET HoTen=?, MatKhau=?, PhanQuyen=?, TinhTrang=? 
+            WHERE MaNV=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssi", $HoTen,  $MatKhau, $TinhTrang ,$PhanQuyen, $MaNV);
+    $stmt->bind_param("sssii", $HoTen, $MatKhau, $PhanQuyen, $TinhTrang, $MaNV);
 
     if ($stmt->execute()) {
-        echo "<script>alert('Cập nhật thành công!'); window.location.href='QuanLyNhanVien.php';</script>";
+        if ($TinhTrang == 1) {
+            echo "<script>alert('✅ Đã mở khóa và cập nhật thông tin nhân viên thành công!'); 
+                  window.location.href='QuanLyNhanVien.php';</script>";
+        } else {
+            echo "<script>alert('💾 Cập nhật thông tin nhân viên thành công!'); 
+                  window.location.href='QuanLyNhanVien.php';</script>";
+        }
     } else {
-        echo "<script>alert('Lỗi khi cập nhật!'); window.history.back();</script>";
+        echo "<script>alert('❌ Lỗi khi cập nhật!'); window.history.back();</script>";
     }
 }
 ?>
