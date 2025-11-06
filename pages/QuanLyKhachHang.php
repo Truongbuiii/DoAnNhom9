@@ -175,27 +175,28 @@ if (isset($_GET['khoa'])) {
                     ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
                     : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
 
-                echo "
-                <tr>
-                    <td>$ma</td>
-                    <td>$ten</td>
-                    <td>$sdt</td>
-                    <td>$badge</td>
-                    <td class='d-flex justify-content-center gap-2'>
-                        <button class='btn btn-warning btn-sm btn-edit' 
-                                data-id='$ma' 
-                                data-ten='$ten' 
-                                data-sdt='$sdt' 
-                                data-tinhtrang='$tinhtrang'>
-                            <i class='fas fa-edit'></i> Sửa
-                        </button>
-                        <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
-                           class='btn btn-danger btn-sm'
-                           onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
-                           🗑️ Xóa
-                        </a>
-                    </td>
-                </tr>";
+               echo "
+                    <tr>
+                        <td>$ma</td>
+                        <td>$ten</td>
+                        <td>$sdt</td>
+                        <td>$badge</td>
+                        <td class='text-center'>
+                            <button class='btn btn-warning btn-sm btn-edit me-2'
+                                    data-id='$ma' 
+                                    data-ten='$ten' 
+                                    data-sdt='$sdt' 
+                                    data-tinhtrang='$tinhtrang'>
+                                <i class='fas fa-edit'></i> Sửa
+                            </button>
+                            <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
+                            class='btn btn-danger btn-sm'
+                            onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
+                            🗑️ Xóa
+                            </a>
+                        </td>
+                    </tr>";
+
             }
         } else {
             echo '<tr><td colspan="5">Chưa có khách hàng nào.</td></tr>';
@@ -242,14 +243,14 @@ if (isset($_GET['khoa'])) {
               <option value="0">Khóa</option>
             </select>
           </div>
-          
+
         </div>
 
         <!-- Footer -->
         <div class="modal-footer border-0 pt-0 pb-4 px-4">
           <button type="button" class="btn btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
           <button type="submit" name="luu_sua" class="btn btn-success rounded-3 px-4 fw-semibold">
-           Lưu thay đổi
+           Lưu
           </button>
         </div>
       </form>
