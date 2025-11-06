@@ -3,19 +3,49 @@
 <?php
 include '../db/connect.php';
 
-// Lấy danh sách nhân viên
-$sql = "SELECT * FROM nhanvien";
-$result = $conn->query($sql);
+// ✅ Lấy giá trị tìm kiếm nếu có
+$search = isset($_GET['search']) ? trim($_GET['search']) : "";
+
+// ✅ Câu truy vấn có điều kiện lọc
+if ($search !== "") {
+    $sql = "SELECT * FROM nhanvien 
+            WHERE TenDangNhap LIKE ? 
+               OR HoTen LIKE ? 
+               OR PhanQuyen LIKE ?";
+    $stmt = $conn->prepare($sql);
+    $like = "%$search%";
+    $stmt->bind_param("sss", $like, $like, $like);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $sql = "SELECT * FROM nhanvien";
+    $result = $conn->query($sql);
+}
 ?>
+
 
 <!-- Nội dung chính -->
 <div class="container-fluid">
   <h1 class="h3 mb-2 text-gray-800">Quản lý nhân viên</h1>
+              <form method="GET" class="mb-3 d-flex align-items-center">
+          <input type="text" name="search" 
+                class="form-control w-50 mr-3" 
+                placeholder="Tìm theo tên đăng nhập, họ tên hoặc phân quyền..."
+                value="<?php echo htmlspecialchars($search); ?>">
+
+          <button class="btn btn-primary mr-2" type="submit">
+            <i class="fas fa-search"></i> Tìm
+          </button>
+
+          <a href="QuanLyNhanVien.php" class="btn btn-secondary">
+            <i class="fas fa-undo"></i> Làm mới
+          </a>
+        </form>
 
   <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
-      <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addModal">+ Thêm nhân viên</button>
+      <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addModal">Thêm nhân viên</button>
     </div>
 
     <div class="card-body">
