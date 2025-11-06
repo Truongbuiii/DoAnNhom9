@@ -141,3 +141,23 @@ VALUES
 (2, 7, 2, 30000, 60000),
 (3, 2, 1, 25000, 25000),
 (3, 9, 1, 27000, 27000);
+
+
+-- =========================
+-- 7️⃣ Trigger: Cập nhật tình trạng bánh theo loại bánh
+-- =========================
+DELIMITER $$
+
+CREATE TRIGGER trg_CapNhatTinhTrangBanh
+AFTER UPDATE ON LoaiBanh
+FOR EACH ROW
+BEGIN
+    -- Khi tình trạng loại bánh thay đổi, cập nhật toàn bộ bánh thuộc loại đó
+    IF NEW.TinhTrang <> OLD.TinhTrang THEN
+        UPDATE ThongTinBanh
+        SET TinhTrang = NEW.TinhTrang
+        WHERE MaLoaiBanh = NEW.MaLoaiBanh;
+    END IF;
+END$$
+
+DELIMITER ;
