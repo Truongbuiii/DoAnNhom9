@@ -11,18 +11,17 @@ if (isset($_GET['xoa'])) {
     $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");
 
     if ($kiemTra && $kiemTra->num_rows > 0) {
-                // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
-            echo "
-            <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
-                <h5>🚫 Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
-                <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
-                <div class='d-flex justify-content-center gap-2 mt-3'>
-                    <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
-                    <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
-                </div>
+        // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
+        echo "
+        <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
+            <h5>🚫 Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
+            <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
+            <div class='d-flex justify-content-center gap-2 mt-3'>
+                <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
+                <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
             </div>
-            ";
-
+        </div>
+        ";
     } else {
         // Không có đơn hàng → xóa luôn
         if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
@@ -57,20 +56,27 @@ if (isset($_GET['khoa'])) {
         echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi khóa khách hàng.</div>";
     }
 }
-
-
 ?>
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <h2 class="text-center mb-4 text-primary">Quản lý khách hàng</h2>
 
-    <!-- Nút thêm khách hàng -->
-    <div class="mb-3 text-end">
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalThemKhachHang">
-            Thêm khách hàng
-        </button>
-    </div>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+    <!-- Nút thêm khách hàng bên trái -->
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalThemKhachHang">
+        Thêm khách hàng
+    </button>
+
+    <!-- Form tìm kiếm gọn bên phải -->
+    <form method="GET" class="d-flex align-items-center gap-1">
+        <input type="text" name="timkiem" class="form-control form-control-sm" placeholder="Họ tên/SĐT" value="<?php echo htmlspecialchars($_GET['timkiem'] ?? ''); ?>" style="width: 300px;">
+        <button type="submit" class="btn btn-primary btn-sm">🔍</button>
+        <?php if (!empty($_GET['timkiem'])): ?>
+            <a href="QuanLyKhachHang.php" class="btn btn-secondary btn-sm">Xóa</a>
+        <?php endif; ?>
+    </form>
+</div>
 
     <!-- 💬 Modal Thêm khách hàng -->
     <div class="modal fade" id="modalThemKhachHang" tabindex="-1" aria-labelledby="modalThemKhachHangLabel" aria-hidden="true">
@@ -81,7 +87,7 @@ if (isset($_GET['khoa'])) {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
 
-                <form method="POST" action="" enctype="multipart/form-data">
+                <form method="POST" action="">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="hoten" class="form-label">Họ và tên</label>
@@ -123,7 +129,6 @@ if (isset($_GET['khoa'])) {
         }
     }
 
-
     // ✏️ Xử lý sửa khách hàng
     if (isset($_POST['luu_sua'])) {
         $ma = intval($_POST['sua_ma']);
@@ -145,67 +150,74 @@ if (isset($_GET['khoa'])) {
             echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi cập nhật: " . $conn->error . "</div>";
         }
     }
+
+    // 🔎 Truy vấn hiển thị khách hàng (có hỗ trợ tìm kiếm)
+    $timkiem = trim($_GET['timkiem'] ?? '');
+    if ($timkiem !== '') {
+        $timkiem_sql = $conn->real_escape_string($timkiem);
+        $sql = "SELECT * FROM KhachHang 
+                WHERE HoTen LIKE '%$timkiem_sql%' OR SDT LIKE '%$timkiem_sql%'
+                ORDER BY MaKH ASC";
+    } else {
+        $sql = "SELECT * FROM KhachHang ORDER BY MaKH ASC";
+    }
+    $result = $conn->query($sql);
     ?>
 
     <!-- 📋 Danh sách khách hàng -->
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="text-primary mb-3">Danh sách khách hàng</h5>
-      <table class="table table-bordered text-center text-dark align-middle">
-    <thead class="table-primary">
-        <tr>
-            <th>Mã KH</th>
-            <th>Họ và tên</th>
-            <th>Số điện thoại</th>
-            <th>Tình trạng</th>
-            <th>Hành động</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        $sql = "SELECT * FROM KhachHang ORDER BY MaKH ASC";
-        $result = $conn->query($sql);
+        <table class="table table-bordered text-center text-dark align-middle">
+            <thead class="table-primary">
+                <tr>
+                    <th>Mã KH</th>
+                    <th>Họ và tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Tình trạng</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                if ($result && $result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $ma = htmlspecialchars($row['MaKH']);
+                        $ten = htmlspecialchars($row['HoTen']);
+                        $sdt = htmlspecialchars($row['SDT']);
+                        $tinhtrang = (int)$row['TinhTrang'];
 
-        if ($result && $result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $ma = htmlspecialchars($row['MaKH']);
-                $ten = htmlspecialchars($row['HoTen']);
-                $sdt = htmlspecialchars($row['SDT']);
-                $tinhtrang = (int)$row['TinhTrang'];
+                        $badge = $tinhtrang == 1
+                            ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
+                            : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
 
-                $badge = $tinhtrang == 1
-                    ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
-                    : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
-
-               echo "
-                    <tr>
-                        <td>$ma</td>
-                        <td>$ten</td>
-                        <td>$sdt</td>
-                        <td>$badge</td>
-                        <td class='text-center'>
-                            <button class='btn btn-warning btn-sm btn-edit me-2'
-                                    data-id='$ma' 
-                                    data-ten='$ten' 
-                                    data-sdt='$sdt' 
-                                    data-tinhtrang='$tinhtrang'>
-                                <i class='fas fa-edit'></i> Sửa
-                            </button>
-                            <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
-                            class='btn btn-danger btn-sm'
-                            onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
-                            🗑️ Xóa
-                            </a>
-                        </td>
-                    </tr>";
-
-            }
-        } else {
-            echo '<tr><td colspan="5">Chưa có khách hàng nào.</td></tr>';
-        }
-        ?>
-    </tbody>
-</table>
-
+                        echo "
+                        <tr>
+                            <td>$ma</td>
+                            <td>$ten</td>
+                            <td>$sdt</td>
+                            <td>$badge</td>
+                            <td class='text-center'>
+                                <button class='btn btn-warning btn-sm btn-edit me-2'
+                                        data-id='$ma' 
+                                        data-ten='$ten' 
+                                        data-sdt='$sdt' 
+                                        data-tinhtrang='$tinhtrang'>
+                                    <i class='fas fa-edit'></i> Sửa
+                                </button>
+                                <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
+                                   class='btn btn-danger btn-sm'
+                                   onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
+                                   🗑️ Xóa
+                                </a>
+                            </td>
+                        </tr>";
+                    }
+                } else {
+                    echo '<tr><td colspan="5">Không tìm thấy khách hàng nào.</td></tr>';
+                }
+                ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -217,7 +229,7 @@ if (isset($_GET['khoa'])) {
       <!-- Header -->
       <div class="modal-header bg-warning text-white rounded-top-4">
         <h5 class="modal-title fw-semibold" id="modalSuaKhachHangLabel">
-      Sửa thông tin khách hàng
+          Sửa thông tin khách hàng
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
       </div>
@@ -260,38 +272,32 @@ if (isset($_GET['khoa'])) {
 </div>
 
 <style>
-    .form-select {
+.form-select {
     height: calc(2.25rem + 2px);
     font-size: 1rem;
     border-radius: 5px;
 }
-
-    .form-control, .form-select {
+.form-control, .form-select {
   font-size: 15px;
   padding: 10px 14px;
   border: 1px solid #ccc;
   transition: all 0.2s ease-in-out;
 }
-
 .form-control:focus, .form-select:focus {
-  border-color: #f0ad4e; /* vàng nhạt */
+  border-color: #f0ad4e;
   box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
 }
-
 .btn-success {
   background-color: #28a745;
   border: none;
   transition: 0.2s;
 }
-
 .btn-success:hover {
   background-color: #218838;
 }
-
 .btn-outline-secondary:hover {
   background-color: #e9ecef;
 }
-
 </style>
 
 <script>
@@ -308,10 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
             modalSua.show();
         });
     });
-
-
 });
-
 </script>
 
 <?php include '../include1/footer.php'; ?>
