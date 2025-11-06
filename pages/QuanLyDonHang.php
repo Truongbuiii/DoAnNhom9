@@ -57,7 +57,7 @@ if ($result === false) {
       <h1 class="h3 mb-2 text-gray-800">Quản lý đơn hàng</h1>
 
       <!-- Thanh tìm kiếm -->
-      <form method="GET" class="mb-3 d-flex justify-content-between">
+<form method="GET" class="mb-3 d-flex align-items-center">
         <input type="text" name="search" class="form-control w-50" 
                placeholder="Tìm theo mã đơn hoặc mã khách hàng..." 
                value="<?php echo htmlspecialchars($search); ?>">
