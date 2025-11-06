@@ -1,7 +1,6 @@
 <?php
 include '../db/connect.php';
-include '../include1/header.php';
-include '../include1/sidebar.php'; 
+
 
 // ==========================
 // Kiểm tra mã đơn hàng
@@ -62,7 +61,7 @@ $detail_result = $detail_stmt->get_result();
     <div class="card shadow">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Chi tiết đơn hàng #<?= htmlspecialchars($order['MaDon']) ?></h5>
-            <a href="ThongKeDoanhThu.php" class="btn btn-light btn-sm">
+            <a href="QuanLyDonHang.php" class="btn btn-light btn-sm">
                 <i class="fas fa-arrow-left"></i> Quay lại
             </a>
         </div>

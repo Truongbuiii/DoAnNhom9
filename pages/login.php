@@ -1,136 +1,131 @@
 <?php
 session_start();
 
-// Cấu hình kết nối cơ sở dữ liệu
+// Kết nối cơ sở dữ liệu
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "nhom9"; // thay bằng tên database của bạn
+$dbname = "nhom9";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 $conn->set_charset("utf8");
 
-// Kiểm tra kết nối
+// Kiểm tra lỗi kết nối
 if ($conn->connect_error) {
-  die("Kết nối thất bại: " . $conn->connect_error);
+    die("Kết nối thất bại: " . $conn->connect_error);
 }
 
-// Khi người dùng nhấn nút Đăng nhập
-if (isset($_POST['login'])) {
-  $user = trim($_POST['username']);
-  $pass = trim($_POST['password']);
+// Khi người dùng nhấn nút đăng nhập
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $TenDangNhap = trim($_POST['username']);
+    $MatKhau = trim($_POST['password']);
 
-  // Kiểm tra thông tin đăng nhập trong bảng users
-  $sql = "SELECT * FROM users WHERE username=? AND password=?";
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param("ss", $user, $pass);
-  $stmt->execute();
-  $result = $stmt->get_result();
+    // Kiểm tra nhập thiếu
+    if (empty($TenDangNhap) || empty($MatKhau)) {
+        echo "<script>alert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');</script>";
+    } else {
+        // Truy vấn kiểm tra tài khoản
+        $sql = "SELECT * FROM nhanvien WHERE TenDangNhap = ? AND MatKhau = ?";
+        $stmt = $conn->prepare($sql);
 
-  if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
+        if ($stmt) {
+            $stmt->bind_param("ss", $TenDangNhap, $MatKhau);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-    // Lưu session
-    $_SESSION['username'] = $row['username'];
-    $_SESSION['role'] = $row['role']; // role = 'admin' hoặc 'nhanvien'
+            if ($result->num_rows > 0) {
+                $user = $result->fetch_assoc();
 
-    // Chuyển hướng đến trang index
-    header("Location: index.php");
-    exit;
-  } else {
-    echo "<script>alert('Tên đăng nhập hoặc mật khẩu không đúng!');</script>";
-  }
+                // Lưu thông tin vào session
+                $_SESSION['MaNV'] = $user['MaNV'];
+                $_SESSION['HoTen'] = $user['HoTen'];
+                $_SESSION['PhanQuyen'] = $user['PhanQuyen'];
+
+                // Phân quyền
+                if ($user['PhanQuyen'] == 'Admin') {
+                    header("Location: ../index.php");
+                    exit;
+                } else {
+                    header("Location: ../index1.php");
+                    exit;
+                }
+            } else {
+                echo "<script>alert('Sai tên đăng nhập hoặc mật khẩu!');</script>";
+            }
+
+            $stmt->close();
+        } else {
+            echo "<script>alert('Lỗi truy vấn SQL!');</script>";
+        }
+    }
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Đăng nhập hệ thống</title>
+    <meta charset="utf-8">
+    <title>Đăng nhập hệ thống</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700" rel="stylesheet">
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
 
-  <!-- Font & CSS -->
-  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-  <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700" rel="stylesheet">
-  <link href="css/sb-admin-2.min.css" rel="stylesheet">
-
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #4e73df, #224abe);
-      font-family: 'Nunito', sans-serif;
-    }
-
-    .login-container {
-      background: white;
-      width: 400px;
-      padding: 40px 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
-      text-align: center;
-    }
-
-    .login-container h1 {
-      font-size: 1.5rem;
-      margin-bottom: 30px;
-      color: #333;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-
-    .form-control-user {
-      border-radius: 50px;
-      padding: 12px 20px;
-      font-size: 14px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .btn-user {
-      border-radius: 50px;
-      padding: 12px 20px;
-      background-color: #4e73df;
-      border: none;
-      font-size: 15px;
-      width: 100%;
-      color: white;
-    }
-
-    .btn-user:hover {
-      background-color: #375ac0;
-    }
-  </style>
+    <style>
+        .bg-login-image {
+            background: url('img/login-bg.jpg');
+            background-position: center;
+            background-size: cover;
+        }
+    </style>
 </head>
 
-<body>
+<body class="bg-gradient-primary">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-xl-10 col-lg-12 col-md-9">
+                <div class="card o-hidden border-0 shadow-lg">
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+                            <div class="col-lg-6">
+                                <div class="p-5">
+                                    <div class="text-center mb-4">
+                                        <h1 class="h4 text-gray-900">Đăng nhập hệ thống</h1>
+                                    </div>
 
-  <div class="login-container">
-    <h1>Đăng nhập hệ thống</h1>
-    <form method="post" action="login.php">
-      <div class="form-group">
-        <input type="text" name="username" class="form-control form-control-user" placeholder="Tên đăng nhập" required>
-      </div>
-      <div class="form-group">
-        <input type="password" name="password" class="form-control form-control-user" placeholder="Mật khẩu" required>
-      </div>
-      <div class="form-group">
-        <button type="submit" name="login" class="btn btn-primary btn-user">Đăng nhập</button>
-      </div>
-    </form>
-  </div>
+                                    <!-- Form đăng nhập -->
+                                    <form class="user" method="POST" action="">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control form-control-user"
+                                                name="username" placeholder="Tên đăng nhập" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="password" class="form-control form-control-user"
+                                                name="password" placeholder="Mật khẩu" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-user btn-block">
+                                            Đăng nhập
+                                        </button>
+                                    </form>
 
-  <!-- JS -->
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+                                    <hr>
+                                    <div class="text-center">
+                                        <small class="text-muted">Hệ thống quản lý CakeShop</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- end row -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/sb-admin-2.min.js"></script>
 </body>
-</html>
+</html>  

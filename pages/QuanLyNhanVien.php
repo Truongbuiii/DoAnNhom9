@@ -31,41 +31,49 @@ $result = $conn->query($sql);
                   <th>Họ tên</th>
                   <th>Mật khẩu</th>
                   <th>Phân quyền</th>
+                  <th>Tình trạng</th>
                   <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 <?php
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        echo "<tr>";
-                        echo "<td>{$row['MaNV']}</td>";
-                        echo "<td>{$row['TenDangNhap']}</td>";
-                        echo "<td>{$row['HoTen']}</td>";
-                        echo "<td>{$row['MatKhau']}</td>";
-                        echo "<td><span class='badge " .
-                             ($row['PhanQuyen'] == 'Admin' ? "badge-danger" : "badge-secondary") .
-                             "'>{$row['PhanQuyen']}</span></td>";
-                        echo "<td>
-                                <button class='btn btn-warning btn-sm btn-edit'
-                                    data-id='{$row['MaNV']}'
-                                    data-tendangnhap='{$row['TenDangNhap']}'
-                                    data-hoten='{$row['HoTen']}'
-                                    data-matkhau='{$row['MatKhau']}'
-                                    data-phanquyen='{$row['PhanQuyen']}'>
-                                    <i class='fas fa-edit'></i> Sửa
-                                </button>
-                                <a href='nhanvien_delete.php?MaNV={$row['MaNV']}'
-                                   class='btn btn-danger btn-sm'
-                                   onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
-                                   <i class='fas fa-trash'></i> Xóa
-                                </a>
-                              </td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='6'>Không có nhân viên nào!</td></tr>";
-                }
+              if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>{$row['MaNV']}</td>";
+        echo "<td>{$row['TenDangNhap']}</td>";
+        echo "<td>{$row['HoTen']}</td>";
+        echo "<td>{$row['MatKhau']}</td>";
+        echo "<td><span class='badge " .
+             ($row['PhanQuyen'] == 'Admin' ? "badge-danger" : "badge-secondary") .
+             "'>{$row['PhanQuyen']}</span></td>";
+
+        // ✅ Thêm tình trạng hiển thị đẹp
+        echo "<td><span class='badge " . 
+             ($row['TinhTrang'] == 1 ? "badge-success'>Mở" : "badge-danger'>Khóa") . 
+             "</span></td>";
+
+        echo "<td>
+                <button class='btn btn-warning btn-sm btn-edit'
+                    data-id='{$row['MaNV']}'
+                    data-tendangnhap='{$row['TenDangNhap']}'
+                    data-hoten='{$row['HoTen']}'
+                    data-matkhau='{$row['MatKhau']}'
+                    data-phanquyen='{$row['PhanQuyen']}'
+                    <i class='fas fa-edit'></i> Sửa
+                </button>
+                <a href='nhanvien_delete.php?MaNV={$row['MaNV']}'
+                   class='btn btn-danger btn-sm'
+                   onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
+                   <i class='fas fa-trash'></i> Xóa
+                </a>
+              </td>";
+        echo "</tr>";
+    }
+} else {
+    echo "<tr><td colspan='7'>Không có nhân viên nào!</td></tr>";
+}
+
                 ?>
               </tbody>
             </table>
@@ -100,7 +108,13 @@ $result = $conn->query($sql);
           <label class="form-label">Mật khẩu (6 số)</label>
           <input type="text" class="form-control" name="MatKhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
-
+        <div class="mb-3">
+                  <label class="form-label">Tình trạng</label>
+                  <select name="tinhtrang" class="form-select">
+                    <option value="1">Mở</option>
+                    <option value="0">Khóa</option>
+                  </select>
+                </div>
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
           <select name="PhanQuyen" class="form-select">
@@ -111,7 +125,7 @@ $result = $conn->query($sql);
       </div>
 
       <div class="modal-footer">
-        <button type="submit" class="btn btn-success">💾 Lưu nhân viên</button>
+        <button type="submit" class="btn btn-success">Lưu nhân viên</button>
       </div>
     </form>
   </div>
@@ -143,7 +157,13 @@ $result = $conn->query($sql);
           <label class="form-label">Mật khẩu (6 số)</label>
           <input type="text" class="form-control" name="MatKhau" id="edit-matkhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
-
+      <div class="mb-3">
+                  <label class="form-label">Tình trạng</label>
+                  <select name="tinhtrang" class="form-select">
+                    <option value="1">Mở</option>
+                    <option value="0">Khóa</option>
+                  </select>
+                </div>
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
           <select name="PhanQuyen" id="edit-phanquyen" class="form-select">
@@ -168,6 +188,7 @@ $result = $conn->query($sql);
       document.getElementById('edit-tendangnhap').value = button.dataset.tendangnhap;
       document.getElementById('edit-hoten').value = button.dataset.hoten;
       document.getElementById('edit-matkhau').value = button.dataset.matkhau; // ✅ giữ nguyên mật khẩu hiện tại
+      document.getElementById('edit-tinhtrang').value = button.dataset.tinhtrang;
       document.getElementById('edit-phanquyen').value = button.dataset.phanquyen;
       $('#editModal').modal('show');
     });

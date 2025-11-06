@@ -1,110 +1,84 @@
 <?php
 include '../db/connect.php';
 include '../include1/header.php';
-include '../include1/sidebar.php'; 
+include '../include/sidebar.php';
 
-if (!isset($_GET['MaDon'])) {
-    echo "<div class='container mt-4'>
-            <div class='alert alert-danger text-center'>
-                Không tìm thấy mã đơn hàng.
-            </div>
-          </div>";
+// ============================
+// KIỂM TRA MÃ ĐƠN HÀNG
+// ============================
+if (!isset($_GET['MaDon']) || empty($_GET['MaDon'])) {
+    echo "<p style='color:red; padding:10px;'>⚠️ Không tìm thấy mã đơn hàng!</p>";
     exit;
 }
 
-$maDon = $_GET['MaDon'];
+$maDon = intval($_GET['MaDon']); // ép kiểu an toàn để tránh SQL injection
 
-// Lấy thông tin đơn hàng
-$order_sql = "
-SELECT d.MaDon, d.NgayLap, d.TongTien, k.HoTen AS TenKH, n.HoTen AS TenNV
-FROM DonHang d
-JOIN KhachHang k ON d.MaKH = k.MaKH
-JOIN NhanVien n ON d.MaNV = n.MaNV
-WHERE d.MaDon = ?
+// ============================
+// TRUY VẤN THÔNG TIN ĐƠN HÀNG
+// ============================
+$sqlDonHang = "
+    SELECT d.MaDon, d.NgayLap, d.TongTien, 
+           kh.HoTen AS TenKH, kh.SDT, 
+           nv.HoTen AS TenNV
+    FROM DonHang d
+    JOIN KhachHang kh ON d.MaKH = kh.MaKH
+    JOIN NhanVien nv ON d.MaNV = nv.MaNV
+    WHERE d.MaDon = $maDon
 ";
-$order_stmt = $conn->prepare($order_sql);
-$order_stmt->bind_param("i", $maDon);
-$order_stmt->execute();
-$order_result = $order_stmt->get_result();
 
-if ($order_result->num_rows == 0) {
-    echo "<div class='container mt-4'>
-            <div class='alert alert-danger text-center'>
-                Không tìm thấy đơn hàng.
-            </div>
-          </div>";
+$result = $conn->query($sqlDonHang);
+$donHang = $result ? $result->fetch_assoc() : null;
+
+if (!$donHang) {
+    echo "<p style='color:red; padding:10px;'>⚠️ Không tìm thấy dữ liệu cho đơn hàng #$maDon.</p>";
     exit;
 }
 
-$order = $order_result->fetch_assoc();
-
-// Lấy chi tiết sản phẩm theo khóa chính (MaDon, MaBanh)
-$detail_sql = "
-SELECT c.MaBanh, b.TenBanh, c.SoLuong, c.DonGia, c.ThanhTien
-FROM ChiTietDonHang c
-JOIN ThongTinBanh b ON c.MaBanh = b.MaBanh
-WHERE c.MaDon = ?
-ORDER BY c.MaBanh
+// ============================
+// TRUY VẤN CHI TIẾT CÁC MẶT HÀNG
+// ============================
+$sqlChiTiet = "
+    SELECT ct.MaBanh, b.TenBanh, ct.SoLuong, ct.DonGia, (ct.SoLuong * ct.DonGia) AS ThanhTien
+    FROM ChiTietDonHang ct
+    JOIN ThongTinBanh b ON ct.MaBanh = b.MaBanh
+    WHERE ct.MaDon = $maDon
 ";
-$detail_stmt = $conn->prepare($detail_sql);
-$detail_stmt->bind_param("i", $maDon);
-$detail_stmt->execute();
-$detail_result = $detail_stmt->get_result();
+$chiTiet = $conn->query($sqlChiTiet);
 ?>
 
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Chi tiết đơn hàng #<?= htmlspecialchars($order['MaDon']) ?></h5>
-            <a href="ThongKeDoanhThu.php" class="btn btn-light btn-sm">
-                <i class="fas fa-arrow-left"></i> Quay lại
-            </a>
-        </div>
-        <div class="card-body">
-            <p><strong>Khách hàng:</strong> <?= htmlspecialchars($order['TenKH']) ?></p>
-            <p><strong>Nhân viên:</strong> <?= htmlspecialchars($order['TenNV']) ?></p>
-            <p><strong>Ngày lập:</strong> <?= $order['NgayLap'] ?></p>
+<div class="container" style="padding: 20px;">
+    <h2>Chi tiết đơn hàng #<?= $donHang['MaDon'] ?></h2>
+    <p><b>Ngày lập:</b> <?= $donHang['NgayLap'] ?></p>
+    <p><b>Khách hàng:</b> <?= $donHang['TenKH'] ?> (<?= $donHang['SDT'] ?>)</p>
+    <p><b>Nhân viên:</b> <?= $donHang['TenNV'] ?></p>
+    <p><b>Tổng tiền:</b> <?= number_format($donHang['TongTien'], 0, ',', '.') ?> VND</p>
 
-            <table class="table table-bordered text-center mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Mã bánh</th>
-                        <th>Tên bánh</th>
-                        <th>Số lượng</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                $tong = 0;
-                if ($detail_result->num_rows > 0) {
-                    while ($row = $detail_result->fetch_assoc()) {
-                        $tong += $row['ThanhTien'];
-                        echo "<tr>
-                                <td>{$row['MaBanh']}</td>
-                                <td>{$row['TenBanh']}</td>
-                                <td>{$row['SoLuong']}</td>
-                                <td>" . number_format($row['DonGia'], 0, ',', '.') . " đ</td>
-                                <td>" . number_format($row['ThanhTien'], 0, ',', '.') . " đ</td>
-                              </tr>";
-                    }
-                    echo "<tr class='table-warning'>
-                            <td colspan='4'><strong>Tổng cộng:</strong></td>
-                            <td><strong>" . number_format($tong, 0, ',', '.') . " đ</strong></td>
-                          </tr>";
-                } else {
-                    echo "<tr><td colspan='5'>Không có sản phẩm trong đơn hàng.</td></tr>";
-                }
-                ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <h4>Danh sách bánh trong đơn hàng</h4>
+    <table border="1" cellspacing="0" cellpadding="8" width="100%">
+        <tr style="background-color: #f2f2f2;">
+            <th>Mã bánh</th>
+            <th>Tên bánh</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+        </tr>
+        <?php if ($chiTiet && $chiTiet->num_rows > 0): ?>
+            <?php while ($row = $chiTiet->fetch_assoc()): ?>
+            <tr>
+                <td><?= $row['MaBanh'] ?></td>
+                <td><?= $row['TenBanh'] ?></td>
+                <td><?= $row['SoLuong'] ?></td>
+                <td><?= number_format($row['DonGia'], 0, ',', '.') ?> VND</td>
+                <td><?= number_format($row['ThanhTien'], 0, ',', '.') ?> VND</td>
+            </tr>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <tr>
+                <td colspan="5" style="text-align:center; color:red;">Không có sản phẩm nào trong đơn hàng này!</td>
+            </tr>
+        <?php endif; ?>
+    </table>
+
+    <br>
+    <a href="chitietdoanhthu.php" class="btn btn-secondary">⬅ Quay lại danh sách đơn hàng</a>
 </div>
-
-<?php
-$order_stmt->close();
-$detail_stmt->close();
-$conn->close();
-?>

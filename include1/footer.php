@@ -25,7 +25,7 @@
                 <div class="modal-body">Bạn có chắc chắn xác nhận đăng xuất không?</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Hủy</button>
-                    <a class="btn btn-primary" href="login.html">Đăng xuất</a>
+                    <a class="btn btn-primary" href="login.php">Đăng xuất</a>
                 </div>
             </div>
         </div>

@@ -4,6 +4,7 @@
 $TenDangNhap = trim($_POST['TenDangNhap']);
 $HoTen = trim($_POST['HoTen']);
 $MatKhau = trim($_POST['MatKhau']);
+$TinhTrang = $_POST['TinhTrang'];
 $PhanQuyen = $_POST['PhanQuyen'];
 
 // ✅ Kiểm tra mật khẩu có đúng 6 chữ số
@@ -25,9 +26,9 @@ if ($result->num_rows > 0) {
 }
 
 // ✅ Nếu hợp lệ -> thêm vào CSDL
-$sql = "INSERT INTO nhanvien (TenDangNhap, HoTen, MatKhau, PhanQuyen) VALUES (?, ?, ?, ?)";
+$sql = "INSERT INTO nhanvien (TenDangNhap, HoTen, MatKhau,TinhTrang, PhanQuyen) VALUES (?, ?, ?, ? , ?)";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ssss", $TenDangNhap, $HoTen, $MatKhau, $PhanQuyen);
+$stmt->bind_param("sssss", $TenDangNhap, $HoTen, $MatKhau, $TinhTrang, $PhanQuyen);
 
 if ($stmt->execute()) {
     echo "<script>alert('✅ Thêm nhân viên thành công!'); window.location='QuanLyNhanVien.php';</script>";
