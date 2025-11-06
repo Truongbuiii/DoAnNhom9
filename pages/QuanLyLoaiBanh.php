@@ -46,12 +46,29 @@
         }
     }
 
-    // 🗑️ Xóa loại bánh
-    if (isset($_GET['xoa'])) {
-        $ma = intval($_GET['xoa']);
-        $conn->query("DELETE FROM LoaiBanh WHERE MaLoaiBanh = $ma");
-        echo "<script>alert('🗑️ Đã xóa loại bánh thành công!'); window.location='QuanLyLoaiBanh.php';</script>";
+   // 🗑️ Xóa hoặc khóa loại bánh
+if (isset($_GET['xoa'])) {
+    $ma = intval($_GET['xoa']);
+
+    // Kiểm tra loại bánh này có sản phẩm nào không
+    $sqlCheckSP = "SELECT COUNT(*) AS TongSP FROM ThongTinBanh WHERE MaLoaiBanh = $ma";
+    $resSP = $conn->query($sqlCheckSP);
+    $tongSP = $resSP->fetch_assoc()['TongSP'];
+
+    if ($tongSP > 0) {
+        // Có sản phẩm thuộc loại này → chỉ khóa, không xóa
+        $conn->query("UPDATE LoaiBanh SET TinhTrang = 0 WHERE MaLoaiBanh = $ma");
+        echo "<script>alert('⚠️ Loại bánh này đã có sản phẩm bán, nên chỉ bị khóa chứ không thể xóa!'); window.location='QuanLyLoaiBanh.php';</script>";
+    } else {
+        // Không có sản phẩm → cho phép xóa
+        if ($conn->query("DELETE FROM LoaiBanh WHERE MaLoaiBanh = $ma")) {
+            echo "<script>alert('🗑️ Đã xóa loại bánh thành công!'); window.location='QuanLyLoaiBanh.php';</script>";
+        } else {
+            echo "<div class='alert alert-danger mt-3'>❌ Lỗi khi xóa: " . $conn->error . "</div>";
+        }
     }
+}
+
     ?>
 
     <!-- 📋 Danh sách loại bánh -->
