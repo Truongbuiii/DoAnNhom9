@@ -107,13 +107,6 @@ $result = $conn->query($sql);
           <input type="text" class="form-control" name="MatKhau" required pattern="\d{6}" maxlength="6" title="Mật khẩu phải gồm đúng 6 chữ số">
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Tình trạng</label>
-          <select name="tinhtrang" class="form-select">
-            <option value="1">Mở</option>
-            <option value="0">Khóa</option>
-          </select>
-        </div>
 
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
@@ -176,7 +169,7 @@ $result = $conn->query($sql);
       </div>
 
       <div class="modal-footer">
-        <button type="submit" class="btn btn-success">💾 Lưu thay đổi</button>
+        <button type="submit" class="btn btn-success">Lưu thay đổi</button>
       </div>
     </form>
   </div>
