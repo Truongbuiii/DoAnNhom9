@@ -186,8 +186,6 @@ if(isset($_POST['checkout'])){
 ?>
 
 <style>
-/* ✅ Thanh cuộn cho khu vực sản phẩm */
-./* ✅ Thanh cuộn dọc cho danh sách sản phẩm */
 .product-scroll {
     max-height: 520px;       /* chiều cao cố định vùng sản phẩm */
     overflow-y: auto;        /* bật thanh cuộn dọc */
