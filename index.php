@@ -1,5 +1,16 @@
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
+<?php
+
+
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['MaNV'])) {
+    header("Location: pages/login.php"); // kiểm tra lại đúng thư mục
+    exit;
+}
+
+include 'include/header.php';
+include 'include/sidebar.php';
+?>
+
 
 
       
