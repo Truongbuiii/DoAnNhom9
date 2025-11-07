@@ -1,7 +1,7 @@
 <?php
 include '../db/connect.php';
 include '../include1/header.php';
-include '../include/sidebar.php';
+include '../include1/sidebar.php';
 
 // ============================
 // KIỂM TRA MÃ ĐƠN HÀNG

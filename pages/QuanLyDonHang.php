@@ -1,5 +1,5 @@
 <?php include '../include1/header.php'; ?>
-<?php include '../include/sidebar.php'; ?>
+<?php include '../include1/sidebar.php'; ?>
 <?php
 $search = "";
 if (isset($_GET['search']) && $_GET['search'] != "") {

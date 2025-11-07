@@ -1,19 +1,7 @@
 <?php
 session_start();
 
-// Kết nối cơ sở dữ liệu
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "nhom9";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8");
-
-// Kiểm tra lỗi kết nối
-if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
-}
+ include '../db/connect.php'; 
 
 // Xử lý đăng nhập
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
