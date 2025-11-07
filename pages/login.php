@@ -40,6 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['MaNV'] = $user['MaNV'];
                 $_SESSION['HoTen'] = $user['HoTen'];
                 $_SESSION['PhanQuyen'] = $user['PhanQuyen'];
+                
 
                 // Phân quyền
                header("Location: ../index.php");
