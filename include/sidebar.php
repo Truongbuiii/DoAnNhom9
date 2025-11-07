@@ -1,6 +1,6 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+    
 }
 
 // ✅ Kiểm tra login trước khi hiển thị sidebar
