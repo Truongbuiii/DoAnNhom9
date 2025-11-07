@@ -1,284 +1,247 @@
 <?php
+ob_start(); // Bắt đầu đệm đầu ra
+
 session_start();
 
-// ⚠️ Kiểm tra đăng nhập
-if (!isset($_SESSION['MaNV'])) {
-    header("Location: pages/login.php");
+include 'db/connect.php';
+$conn->set_charset("utf8");
+
+include 'include/header.php';
+include 'include/sidebar.php';
+
+// ==========================
+// Xử lý thêm sản phẩm
+// ==========================
+if(isset($_POST['add_product'])){
+    $maBanh = intval($_POST['MaBanh']);
+    $soLuong = 1;
+    $row = mysqli_fetch_assoc(mysqli_query($conn,"SELECT TenBanh, Gia, MaLoaiBanh FROM ThongTinBanh WHERE MaBanh=$maBanh"));
+    if(isset($_SESSION['cart'][$maBanh])){
+        $_SESSION['cart'][$maBanh]['SoLuong'] += $soLuong;
+        $_SESSION['cart'][$maBanh]['ThanhTien'] += $row['Gia'] * $soLuong;
+    } else {
+        $_SESSION['cart'][$maBanh] = [
+            'TenBanh' => $row['TenBanh'],
+            'DonGia' => $row['Gia'],
+            'SoLuong' => $soLuong,
+            'ThanhTien' => $row['Gia'] * $soLuong,
+            'MaLoaiBanh' => $row['MaLoaiBanh']
+        ];
+    }
+}
+
+// ==========================
+// Xóa sản phẩm
+// ==========================
+if(isset($_GET['remove'])){
+    $maBanh = intval($_GET['remove']);
+    unset($_SESSION['cart'][$maBanh]);
+}
+
+// ==========================
+// Chọn khách hàng
+// ==========================
+if(isset($_POST['select_customer'])){
+    $_SESSION['selected_customer'] = intval($_POST['MaKH']);
+}
+
+// ==========================
+// Thêm khách hàng mới
+// ==========================
+if(isset($_POST['add_customer'])){
+    $tenKH = trim($_POST['TenKH']);
+    $sdt = trim($_POST['SDT']);
+    if($tenKH != ''){
+        mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH','$sdt')");
+    }
+    // Chuyển hướng sau khi thêm xong để tránh thêm trùng khi reload
+    header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
 
-// Kết nối CSDL
-include 'db/connect.php';
-$conn->set_charset("utf8");
+// ==========================
+// Thanh toán
+// ==========================
+if(isset($_POST['checkout'])){
+    $maKH = $_SESSION['selected_customer'] ?? null;
+    if(!$maKH){
+        echo "<script>alert('Vui lòng chọn khách hàng!');</script>";
+    } else {
+        mysqli_query($conn,"INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) VALUES(NOW(),0,$maKH,{$_SESSION['MaNV']})");
+        $maDon = mysqli_insert_id($conn);
+        $tongTien = 0;
+
+        foreach($_SESSION['cart'] as $maBanh => $item){
+            $tongTien += $item['ThanhTien'];
+            mysqli_query($conn,"INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
+                                VALUES($maDon,$maBanh,{$item['SoLuong']},{$item['DonGia']},{$item['ThanhTien']})");
+        }
+
+        mysqli_query($conn,"UPDATE DonHang SET TongTien=$tongTien WHERE MaDon=$maDon");
+        unset($_SESSION['cart']);
+        unset($_SESSION['selected_customer']);
+
+        echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
+    }
+}
+
+// ==========================
+// Dữ liệu hiển thị
+// ==========================
+$khachHangRes = mysqli_query($conn,"SELECT * FROM KhachHang ORDER BY MaKH DESC");
+$loaiBanhRes = mysqli_query($conn,"SELECT * FROM LoaiBanh");
+$loaiBanhArr = [];
+while($loai = mysqli_fetch_assoc($loaiBanhRes)){ $loaiBanhArr[] = $loai; }
+
+$selectedCustomer = null;
+if(isset($_SESSION['selected_customer'])){
+    $selectedCustomer = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM KhachHang WHERE MaKH=".$_SESSION['selected_customer']));
+}
 ?>
 
-<?php include 'include/header.php'; ?>
-<?php include 'include/sidebar.php'; ?>
+<style>
+.left-column { display: flex; flex-direction: column; height: 85vh; }
+.left-top { flex: 1; overflow-y: auto; }
+.left-bottom { flex: 2; overflow-y: auto; margin-top: 10px; }
+.right-column { height: 85vh; overflow-y: auto; }
+.product-btn {
+    width: 100%; height: 120px; border: 1px solid #ccc;
+    border-radius: 8px; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; background: #fff;
+    transition: .3s;
+}
+.product-btn:hover { background: #f5f5f5; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+</style>
 
-<!-- Content Wrapper -->
-<div id="content-wrapper" class="d-flex flex-column">
+<div class="container-fluid">
+    <h1 class="h4 mb-4 text-gray-800">Trang bán hàng</h1>
 
-    <!-- Main Content -->
-    <div id="content">
+    <div class="row">
+        <!-- BÊN TRÁI -->
+        <div class="col-lg-7 left-column">
+            <!-- KHÁCH HÀNG -->
+            <div class="card left-top">
+                <div class="card-header"><strong>Chọn khách hàng</strong></div>
+                <div class="card-body">
+                    <form method="post" class="mb-3 d-flex">
+                        <select name="MaKH" class="form-select me-2">
+                            <option value="">-- Chọn khách hàng có sẵn --</option>
+                            <?php while($kh = mysqli_fetch_assoc($khachHangRes)): ?>
+                                <option value="<?= $kh['MaKH'] ?>" <?= isset($_SESSION['selected_customer']) && $_SESSION['selected_customer']==$kh['MaKH'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($kh['HoTen']) ?> (<?= $kh['SDT'] ?>)
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                        <button name="select_customer" class="btn btn-primary">Chọn</button>
+                    </form>
 
-        <!-- Topbar -->
-        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <form method="post" class="row g-2">
+                        <div class="col-md-5">
+                            <input type="text" name="TenKH" class="form-control" placeholder="Tên KH mới">
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" name="SDT" class="form-control" placeholder="SĐT">
+                        </div>
+                        <div class="col-md-2">
+                            <button name="add_customer" class="btn btn-success w-100">Thêm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-            <!-- Sidebar Toggle (Topbar) -->
-            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                <i class="fa fa-bars"></i>
-            </button>
-
-            <!-- Topbar Navbar -->
-            <ul class="navbar-nav ml-auto">
-
-                <!-- Nav Item - User Information -->
-                <li class="nav-item dropdown no-arrow">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                            <?php 
-                                if (isset($_SESSION['PhanQuyen']) && $_SESSION['PhanQuyen'] == 'Admin') {
-                                    echo 'Admin';
-                                } else {
-                                    echo 'Nhân viên';
-                                }
-                            ?>
-                        </span>
-                        <img class="img-profile rounded-circle" src="img/undraw_profile.svg">
-                    </a>
-
-                    <!-- Dropdown - User Information -->
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                        aria-labelledby="userDropdown">
-                     
-                               <a class="dropdown-item" href="pages/logout.php">
-    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-    Đăng xuất
-</a>
-
-
-                    </div>
-                </li>
-            </ul>
-        </nav>
-        <!-- End of Topbar -->
-
-        <!-- Begin Page Content -->
-        <div class="container-fluid">
-            <?php
-            // ==========================
-            // Xử lý thêm sản phẩm
-            // ==========================
-            if(isset($_POST['add_product'])){
-                $maBanh = intval($_POST['MaBanh']);
-                $soLuong = 1;
-                $row = mysqli_fetch_assoc(mysqli_query($conn,"SELECT TenBanh, Gia, MaLoaiBanh FROM ThongTinBanh WHERE MaBanh=$maBanh"));
-                if(isset($_SESSION['cart'][$maBanh])){
-                    $_SESSION['cart'][$maBanh]['SoLuong'] += $soLuong;
-                    $_SESSION['cart'][$maBanh]['ThanhTien'] += $row['Gia'] * $soLuong;
-                } else {
-                    $_SESSION['cart'][$maBanh] = [
-                        'TenBanh' => $row['TenBanh'],
-                        'DonGia' => $row['Gia'],
-                        'SoLuong' => $soLuong,
-                        'ThanhTien' => $row['Gia'] * $soLuong,
-                        'MaLoaiBanh' => $row['MaLoaiBanh']
-                    ];
-                }
-            }
-
-            // ==========================
-            // Xóa sản phẩm
-            // ==========================
-            if(isset($_GET['remove'])){
-                $maBanh = intval($_GET['remove']);
-                unset($_SESSION['cart'][$maBanh]);
-            }
-
-            // ==========================
-            // Thanh toán
-            // ==========================
-            if(isset($_POST['checkout'])){
-                $chonKH = $_POST['chonKH'] ?? ''; // 'moi' hoặc 'cu'
-                $maKH = null;
-
-                if($chonKH == 'moi'){
-                    $tenKH = trim($_POST['TenKH'] ?? '');
-                    $sdtKH = trim($_POST['SDT'] ?? '');
-                    if($tenKH == ''){
-                        echo "<script>alert('Vui lòng nhập tên khách hàng mới!');</script>";
-                        exit;
-                    }
-                    mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH','$sdtKH')");
-                    $maKH = mysqli_insert_id($conn);
-                } elseif($chonKH == 'cu'){
-                    $maKH = intval($_POST['MaKH'] ?? 0);
-                }
-
-                if(!$maKH){
-                    $res = mysqli_query($conn,"SELECT MaKH FROM KhachHang WHERE HoTen='Khách lẻ' LIMIT 1");
-                    if(mysqli_num_rows($res) > 0){
-                        $maKH = mysqli_fetch_assoc($res)['MaKH'];
-                    } else {
-                        mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('Khách lẻ','')");
-                        $maKH = mysqli_insert_id($conn);
-                    }
-                }
-
-                mysqli_query($conn,"INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) VALUES(NOW(),0,$maKH,{$_SESSION['MaNV']})");
-                $maDon = mysqli_insert_id($conn);
-
-                $tongTien = 0;
-                foreach($_SESSION['cart'] as $maBanh => $item){
-                    $tongTien += $item['ThanhTien'];
-                    mysqli_query($conn,"INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
-                                        VALUES($maDon,$maBanh,{$item['SoLuong']},{$item['DonGia']},{$item['ThanhTien']})");
-                }
-
-                mysqli_query($conn,"UPDATE DonHang SET TongTien=$tongTien WHERE MaDon=$maDon");
-                unset($_SESSION['cart']);
-
-                echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
-            }
-
-            // ==========================
-            // Lấy danh sách loại bánh
-            // ==========================
-            $loaiBanhRes = mysqli_query($conn,"SELECT * FROM LoaiBanh");
-            $loaiBanhArr = [];
-            while($loai = mysqli_fetch_assoc($loaiBanhRes)){
-                $loaiBanhArr[] = $loai;
-            }
-            ?>
-
-            <style>
-            .product-scroll {
-                max-height: 520px;
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding-right: 10px;
-                scrollbar-width: thin;
-            }
-            .product-scroll::-webkit-scrollbar {
-                width: 8px;
-            }
-            .product-scroll::-webkit-scrollbar-thumb {
-                background: #888;
-                border-radius: 4px;
-            }
-            .product-scroll::-webkit-scrollbar-thumb:hover {
-                background: #555;
-            }
-            .product-box {
-                width: 100%;
-                height: 130px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-direction: column;
-                border: 1px solid #ddd;
-                border-radius: 10px;
-                transition: 0.3s;
-                background: #fff;
-            }
-            .product-box:hover {
-                background: #f8f9fa;
-                box-shadow: 0 0 5px rgba(0,0,0,0.2);
-            }
-            </style>
-
-            <h1 class="h3 mb-4 text-gray-800">Trang bán hàng</h1>
-
-            <div class="row">
-                <!-- Cột trái -->
-                <div class="col-lg-6">
-                   
-
-                    <!-- Tabs danh mục -->
-                    <h5>Sản phẩm</h5>
-                    <ul class="nav nav-tabs" id="tabLoaiBanh" role="tablist">
-                        <?php foreach($loaiBanhArr as $index => $loai): ?>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link <?= $index==0?'active':'' ?>" id="tab-<?= $loai['MaLoaiBanh'] ?>"
-                                    data-bs-toggle="tab" data-bs-target="#content-<?= $loai['MaLoaiBanh'] ?>" type="button" role="tab">
-                                <?= htmlspecialchars($loai['TenLoaiBanh']) ?>
-                            </button>
-                        </li>
+            <!-- DANH SÁCH SẢN PHẨM -->
+            <div class="card left-bottom mt-3">
+                <div class="card-header"><strong>Danh sách sản phẩm</strong></div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <?php foreach($loaiBanhArr as $index=>$loai): ?>
+                            <li class="nav-item">
+                                <button class="nav-link <?= $index==0?'active':'' ?>" data-bs-toggle="tab"
+                                    data-bs-target="#tab-<?= $loai['MaLoaiBanh'] ?>"><?= htmlspecialchars($loai['TenLoaiBanh']) ?></button>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
 
                     <div class="tab-content mt-3">
-                        <?php foreach($loaiBanhArr as $index => $loai): ?>
-                        <div class="tab-pane fade <?= $index==0?'show active':'' ?>" id="content-<?= $loai['MaLoaiBanh'] ?>" role="tabpanel">
-                            <div class="product-scroll">
-                                <div class="row">
-                                    <?php
-                                    $res = mysqli_query($conn,"SELECT * FROM ThongTinBanh WHERE MaLoaiBanh={$loai['MaLoaiBanh']}");
-                                    while($row = mysqli_fetch_assoc($res)):
-                                    ?>
-                                    <div class="col-md-3 mb-3">
-                                        <form method="post" class="text-center">
-                                            <input type="hidden" name="MaBanh" value="<?= $row['MaBanh'] ?>">
-                                            <button type="submit" name="add_product" class="btn btn-light product-box">
-                                                <strong><?= htmlspecialchars($row['TenBanh']) ?></strong>
-                                                <small><?= number_format($row['Gia'],0,',','.') ?> đ</small>
-                                            </button>
-                                        </form>
-                                    </div>
-                                    <?php endwhile; ?>
+                        <?php foreach($loaiBanhArr as $index=>$loai): ?>
+                        <div class="tab-pane fade <?= $index==0?'show active':'' ?>" id="tab-<?= $loai['MaLoaiBanh'] ?>">
+                            <div class="row">
+                                <?php
+                                $banhRes = mysqli_query($conn,"SELECT * FROM ThongTinBanh WHERE MaLoaiBanh={$loai['MaLoaiBanh']}");
+                                while($b = mysqli_fetch_assoc($banhRes)):
+                                ?>
+                                <div class="col-md-3 mb-3">
+                                    <form method="post">
+                                        <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
+                                        <button type="submit" name="add_product" class="product-btn">
+                                            <strong><?= htmlspecialchars($b['TenBanh']) ?></strong>
+                                            <small><?= number_format($b['Gia'],0,',','.') ?> đ</small>
+                                        </button>
+                                    </form>
                                 </div>
+                                <?php endwhile; ?>
                             </div>
                         </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Cột phải -->
-                <div class="col-lg-6">
-                    <form method="post">
-                        <h5>Đơn hàng tạm</h5>
-                        <table class="table table-bordered text-center">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Tên bánh</th>
-                                    <th>Số lượng</th>
-                                    <th>Thành tiền</th>
-                                    <th>Xóa</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $tongTien = 0;
-                                if(!empty($_SESSION['cart'])){
-                                    foreach($_SESSION['cart'] as $maBanh => $item){
-                                        $tongTien += $item['ThanhTien'];
-                                        echo "<tr>
-                                            <td>{$item['TenBanh']}</td>
-                                            <td>{$item['SoLuong']}</td>
-                                            <td>".number_format($item['ThanhTien'],0,',','.')." đ</td>
-                                            <td><a href='?remove=$maBanh' class='btn btn-sm btn-danger'>X</a></td>
-                                        </tr>";
-                                    }
-                                    echo "<tr class='table-warning'>
-                                            <td colspan='2'><strong>Tổng cộng</strong></td>
-                                            <td colspan='2'><strong>".number_format($tongTien,0,',','.')." đ</strong></td>
-                                          </tr>";
-                                } else {
-                                    echo "<tr><td colspan='4'>Chưa chọn sản phẩm</td></tr>";
+        <!-- BÊN PHẢI -->
+        <div class="col-lg-5 right-column">
+            <div class="card h-100">
+                <div class="card-header"><strong>Đơn hàng tạm</strong></div>
+                <div class="card-body">
+                  <?php if($selectedCustomer): ?>
+    <div class="mb-2">
+        <h6>Khách hàng: <strong><?= htmlspecialchars($selectedCustomer['HoTen']) ?></strong></h6>
+        <h6>Số điện thoại: <strong><?= htmlspecialchars($selectedCustomer['SDT']) ?></strong></h6>
+    </div>
+<?php else: ?>
+    <h6><em>Chưa chọn khách hàng</em></h6>
+<?php endif; ?>
+
+                    <hr>
+                    <table class="table table-bordered text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Tên bánh</th>
+                                <th>SL</th>
+                                <th>Thành tiền</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $tongTien = 0;
+                            if(!empty($_SESSION['cart'])){
+                                foreach($_SESSION['cart'] as $maBanh=>$item){
+                                    $tongTien += $item['ThanhTien'];
+                                    echo "<tr>
+                                        <td>{$item['TenBanh']}</td>
+                                        <td>{$item['SoLuong']}</td>
+                                        <td>".number_format($item['ThanhTien'],0,',','.')." đ</td>
+                                        <td><a href='?remove=$maBanh' class='btn btn-sm btn-danger'>X</a></td>
+                                    </tr>";
                                 }
-                                ?>
-                            </tbody>
-                        </table>
-                        <?php if(!empty($_SESSION['cart'])): ?>
-                            <button type="submit" name="checkout" class="btn btn-success w-100">Thanh toán</button>
-                        <?php endif; ?>
-                    </form>
+                            } else {
+                                echo "<tr><td colspan='4'>Chưa có sản phẩm</td></tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                    <div class="text-end mb-3"><strong>Tổng: <?= number_format($tongTien,0,',','.') ?> đ</strong></div>
+                    <?php if(!empty($_SESSION['cart'])): ?>
+                        <form method="post">
+                            <button name="checkout" class="btn btn-success w-100">Thanh toán</button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-        <!-- /.container-fluid -->
     </div>
 </div>
 
-<?php include 'include/footer.php'; ?>
+<?php include 'include/footer.php'; 
+ob_end_flush(); ?>
