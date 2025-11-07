@@ -20,11 +20,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $TenDangNhap = trim($_POST['username']);
     $MatKhau = trim($_POST['password']);
 
-    // Kiểm tra nhập thiếu
     if (empty($TenDangNhap) || empty($MatKhau)) {
         echo "<script>alert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');</script>";
     } else {
-        // Truy vấn kiểm tra tài khoản
+        // Kiểm tra tài khoản
         $sql = "SELECT * FROM nhanvien WHERE TenDangNhap = ? AND MatKhau = ?";
         $stmt = $conn->prepare($sql);
 
@@ -36,16 +35,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($result->num_rows > 0) {
                 $user = $result->fetch_assoc();
 
-                // Lưu thông tin vào session
+                // 🔒 Lưu thông tin đăng nhập vào SESSION
                 $_SESSION['MaNV'] = $user['MaNV'];
                 $_SESSION['HoTen'] = $user['HoTen'];
                 $_SESSION['PhanQuyen'] = $user['PhanQuyen'];
-                
+                $_SESSION['username'] = $user['TenDangNhap']; // ✅ thêm dòng này
 
-                // Phân quyền
-               header("Location: ../index.php");
-exit;
-
+                header("Location: ../index.php");
+                exit;
             } else {
                 echo "<script>alert('Sai tên đăng nhập hoặc mật khẩu!');</script>";
             }
@@ -125,4 +122,4 @@ $conn->close();
     <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="/js/sb-admin-2.min.js"></script>
 </body>
-</html>  
+</html>

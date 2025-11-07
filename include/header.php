@@ -1,6 +1,6 @@
 <?php
 include_once __DIR__ . '/../db/connect.php';
-session_start();
+
 
 ?>
 

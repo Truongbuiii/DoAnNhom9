@@ -1,11 +1,15 @@
 <?php
-// Bắt đầu session nếu chưa có
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Lấy quyền người dùng (nếu có)
-$role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
+// ✅ Kiểm tra login trước khi hiển thị sidebar
+if (!isset($_SESSION['username'])) {
+    header("Location: /login.php");
+    exit;
+}
+
+$role = $_SESSION['PhanQuyen'] ?? '';
 ?>
 
 <!-- Sidebar -->
@@ -36,12 +40,8 @@ $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
         <!-- Divider -->
         <hr class="sidebar-divider">
 
-        <!-- Heading -->
-        <div class="sidebar-heading">
-            Tùy chọn
-        </div>
+        <div class="sidebar-heading">Tùy chọn</div>
 
-        <!-- Quản lý nhân viên -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/QuanLyNhanVien.php">
                 <i class="fas fa-fw fa-users"></i>
@@ -49,7 +49,6 @@ $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
             </a>
         </li>
 
-        <!-- Quản lý bánh -->
         <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBanh" aria-expanded="false" aria-controls="collapseBanh">
                 <i class="fas fa-fw fa-bread-slice"></i>
@@ -63,7 +62,6 @@ $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
             </div>
         </li>
 
-        <!-- Quản lý khách hàng -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/QuanLyKhachHang.php">
                 <i class="fas fa-fw fa-user"></i>
@@ -71,7 +69,6 @@ $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
             </a>
         </li>
 
-        <!-- Quản lý đơn hàng -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/QuanLyDonHang.php">
                 <i class="fas fa-fw fa-box"></i>
@@ -79,7 +76,6 @@ $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
             </a>
         </li>
 
-        <!-- Thống kê & Báo cáo -->
         <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThongKe" aria-expanded="false" aria-controls="collapseThongKe">
                 <i class="fas fa-fw fa-chart-bar"></i>
@@ -94,12 +90,9 @@ $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
         </li>
     <?php endif; ?>
 
-    <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 
-    <!-- Sidebar Toggler -->
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>
 </ul>
-<!-- End of Sidebar -->
