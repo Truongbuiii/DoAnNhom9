@@ -1,6 +1,4 @@
 <?php
-ob_start(); // Bắt đầu đệm đầu ra
-
 session_start();
 
 include 'db/connect.php';
@@ -243,5 +241,4 @@ if(isset($_SESSION['selected_customer'])){
     </div>
 </div>
 
-<?php include 'include/footer.php'; 
-ob_end_flush(); ?>
+<?php include 'include/footer.php'; ?>

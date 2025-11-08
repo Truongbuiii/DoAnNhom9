@@ -5,7 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // ✅ Kiểm tra login trước khi hiển thị sidebar
 if (!isset($_SESSION['username'])) {
-    header("Location: /login.php");
+    header("Location: pages/login.php");
     exit;
 }
 
