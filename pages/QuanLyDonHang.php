@@ -32,6 +32,29 @@ $result = $conn->query($sql);
 if ($result === false) {
     echo "<div class='alert alert-danger'>Lỗi SQL: " . htmlspecialchars($conn->error) . "</div>";
 }
+
+if (isset($_GET['xoa'])) {
+    $maDon = (int)$_GET['xoa'];
+
+    // Xóa chi tiết đơn hàng trước
+    $conn->query("DELETE FROM ChiTietDonHang WHERE MaDon = $maDon");
+
+    // Sau đó xóa đơn hàng chính
+    if ($conn->query("DELETE FROM DonHang WHERE MaDon = $maDon")) {
+        echo "<script>
+            alert('Đã xóa đơn hàng #{$maDon} và toàn bộ chi tiết liên quan!');
+            window.location='QuanLyDonHang.php';
+        </script>";
+    } else {
+        echo "<script>
+            alert('Lỗi khi xóa đơn hàng!');
+            window.location='QuanLyDonHang.php';
+        </script>";
+    }
+
+    exit;
+}
+
 ?>
 
 
@@ -86,10 +109,14 @@ if ($result === false) {
                     <td><b>{$tong}</b></td>
                     <td>{$tenKH}</td>
                     <td>{$tenNV}</td>
-                    <td>
-                      <button class='btn btn-info btn-sm btn-detail' data-id='{$maDon}'>
-                        <i class='fas fa-eye'></i> Xem
-                      </button>
+                  <td>
+         <button class='btn btn-info btn-sm btn-detail' data-id='{$maDon}'>Xem</button>
+<a href='?xoa={$maDon}' 
+   class='btn btn-danger btn-sm btn-delete'
+   data-id='{$maDon}'
+   data-kh='{$tenKH}'
+   data-tong='{$tong}'>Xóa</a>
+          </button>
                     </td>
                   </tr>";
         }
@@ -120,6 +147,26 @@ if ($result === false) {
   </div>
 </div>
 
+<!-- Modal xác nhận xóa đơn hàng -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Xác nhận xóa đơn hàng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteMessage" class="mb-0"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Xóa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 // Xem chi tiết đơn hàng (AJAX)
 document.querySelectorAll('.btn-detail').forEach(btn => {
@@ -133,6 +180,42 @@ document.querySelectorAll('.btn-detail').forEach(btn => {
       .catch(() => document.getElementById('order-detail-content').innerHTML = '<p class="text-danger text-center">Lỗi tải dữ liệu!</p>');
   });
 });
+
+
+// Xử lý xóa đơn hàng
+let deleteId = null;
+
+document.querySelectorAll('.btn-delete').forEach(btn => {
+  // Thêm 'event' vào đây
+  btn.addEventListener('click', (event) => {
+    // Dòng quan trọng nhất: Ngăn thẻ <a> điều hướng ngay lập tức
+    event.preventDefault(); 
+
+    deleteId = btn.dataset.id;
+    // Sửa lại cho đúng tên dataset bạn đã đặt (data-kh)
+    const tenKH = btn.dataset.kh || 'Không rõ'; 
+    // Lấy data-tong (bạn cần thêm nó vào HTML, xem bước 2)
+const tongTien = btn.dataset.tong || '0 ₫';
+    // Hiển thị nội dung xác nhận rõ ràng
+    document.getElementById('deleteMessage').innerHTML =
+      `<strong>Bạn có chắc chắn muốn xóa đơn hàng <span class="text-danger">#${deleteId}</span>?</strong><br>
+       Khách hàng: <b>${tenKH}</b><br>
+       Tổng tiền: <b>${tongTien}</b><br><br>
+       <span class="text-danger fw-semibold">Hành động này không thể hoàn tác!</span>`;
+
+    // Mở popup xác nhận (Code của bạn đã đúng)
+    new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
+  });
+});
+
+// Khi người dùng xác nhận xóa (Code này đã đúng, giữ nguyên)
+document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+  if (deleteId) {
+    // Chỉ điều hướng KHI người dùng bấm nút "Xóa" trong modal
+    window.location.href = `QuanLyDonHang.php?xoa=${deleteId}`;
+  }
+});
+
 </script>
 
 <?php include '../include1/footer.php'; ?>
