@@ -1,15 +1,17 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) {
-    
+    session_start(); // Khởi tạo session
 }
 
-// ✅ Kiểm tra login trước khi hiển thị sidebar
+// ✅ Kiểm tra đăng nhập
 if (!isset($_SESSION['username'])) {
     header("Location: pages/login.php");
     exit;
 }
 
+// ✅ Lấy thông tin từ session
 $role = $_SESSION['PhanQuyen'] ?? '';
+$MaNV = $_SESSION['MaNV'] ?? 0;
 ?>
 
 <!-- Sidebar -->
@@ -97,31 +99,35 @@ $role = $_SESSION['PhanQuyen'] ?? '';
     </div>
 </ul>
 
- <div id="content-wrapper" class="d-flex flex-column">
+<!-- Content Wrapper -->
+<div id="content-wrapper" class="d-flex flex-column">
 
-        <!-- Main Content -->
-        <div id="content">
+    <!-- Main Content -->
+    <div id="content">
 
-            <!-- Topbar -->
-            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                    <i class="fa fa-bars"></i>
-                </button>
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                <i class="fa fa-bars"></i>
+            </button>
 
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item dropdown no-arrow">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <span class="mr-2 d-none d-lg-inline text-gray-600 small">Admin</span>
-                            <img class="img-profile rounded-circle" src="../img/undraw_profile.svg">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown no-arrow">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <!-- ✅ Chỉ hiện phân quyền -->
+                        <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                            <?php echo ($role == 'Admin') ? 'Admin' : 'Nhân viên'; ?>
+                        </span>
+                        <img class="img-profile rounded-circle" src="../img/undraw_profile.svg">
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                        aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Đăng xuất
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                            aria-labelledby="userDropdown">
-                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Đăng xuất
-                            </a>
-                        </div>
-                    </li>
-                </ul>
-            </nav>
+                    </div>
+                </li>
+            </ul>
+        </nav>

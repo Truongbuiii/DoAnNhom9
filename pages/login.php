@@ -1,9 +1,7 @@
 <?php
 session_start();
+include '../db/connect.php'; 
 
- include '../db/connect.php'; 
-
-// Xử lý đăng nhập
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $TenDangNhap = trim($_POST['username']);
     $MatKhau = trim($_POST['password']);
@@ -11,31 +9,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($TenDangNhap) || empty($MatKhau)) {
         echo "<script>alert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');</script>";
     } else {
-        $sql = "SELECT * FROM nhanvien WHERE TenDangNhap = ? AND MatKhau = ?";
+        // ✅ Tìm nhân viên theo tên đăng nhập
+        $sql = "SELECT * FROM nhanvien WHERE TenDangNhap = ?";
         $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $TenDangNhap);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        if ($stmt) {
-            $stmt->bind_param("ss", $TenDangNhap, $MatKhau);
-            $stmt->execute();
-            $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
 
-            if ($result->num_rows > 0) {
-                $user = $result->fetch_assoc();
+            // ✅ Kiểm tra mật khẩu (nếu bạn không mã hóa, dùng so sánh trực tiếp)
+            if ($MatKhau === $user['MatKhau']) {
+
+                // 🔥 Lưu thông tin vào session
                 $_SESSION['MaNV'] = $user['MaNV'];
                 $_SESSION['HoTen'] = $user['HoTen'];
                 $_SESSION['PhanQuyen'] = $user['PhanQuyen'];
                 $_SESSION['username'] = $user['TenDangNhap'];
 
+                // ✅ Chuyển hướng về trang chính
                 header("Location: ../index.php");
                 exit;
             } else {
-                echo "<script>alert('Sai tên đăng nhập hoặc mật khẩu!');</script>";
+                echo "<script>alert('Sai mật khẩu!');</script>";
             }
-
-            $stmt->close();
         } else {
-            echo "<script>alert('Lỗi truy vấn SQL!');</script>";
+            echo "<script>alert('Tên đăng nhập không tồn tại!');</script>";
         }
+
+        $stmt->close();
     }
 }
 
@@ -48,7 +51,6 @@ $conn->close();
     <title>Đăng nhập hệ thống</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 🎨 Nền xanh đều */
         html, body {
             height: 100%;
             margin: 0;
@@ -58,63 +60,22 @@ $conn->close();
             background-color: #4e73df;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        /* 🖼️ Khung đăng nhập trắng, rộng ngang */
         .card-login {
-            width: 100%;           /* chiếm 80% chiều ngang màn hình */
-            max-width: 900px;     /* không quá rộng trên màn hình lớn */
+            width: 100%;
+            max-width: 900px;
             border-radius: 1.2rem;
             padding: 3rem 2.5rem;
             background-color: #fff;
             box-shadow: 0 1rem 2rem rgba(0,0,0,0.3);
             transition: transform 0.2s;
         }
-
-        .card-login:hover {
-            transform: scale(1.02);
-        }
-
-        /* Tiêu đề */
-        .card-login .text-center h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #224abe;
-            margin-bottom: 2rem;
-        }
-
-        /* Input fields */
-        .form-control-user {
-            border-radius: 50px;
-            padding: 1rem 1.5rem;
-            font-size: 1rem;
-        }
-
-        /* Button */
-        .btn-user {
-            border-radius: 50px;
-            padding: 0.75rem;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        /* Thông tin nhỏ */
-        .card-login .text-center small {
-            color: #6c757d;
-        }
-
-        /* Khoảng cách form */
-        .form-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        /* Responsive nhỏ hơn 576px (mobile) */
+        .card-login:hover { transform: scale(1.02); }
+        .card-login .text-center h1 { font-size: 2rem; font-weight: 700; color: #224abe; margin-bottom: 2rem; }
+        .form-control-user { border-radius: 50px; padding: 1rem 1.5rem; font-size: 1rem; }
+        .btn-user { border-radius: 50px; padding: 0.75rem; font-size: 1rem; font-weight: 600; }
+        .form-wrapper { display: flex; flex-direction: column; gap: 1rem; }
         @media (max-width: 576px) {
-            .card-login {
-                width: 95%;  /* trên mobile gần full màn hình */
-                padding: 2rem 1.5rem;
-            }
+            .card-login { width: 95%; padding: 2rem 1.5rem; }
         }
     </style>
 </head>
