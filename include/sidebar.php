@@ -1,12 +1,15 @@
 <?php
-// Bắt đầu session nếu chưa có
 if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+    
 }
 
-// Lấy quyền người dùng (nếu có)
-$role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
+// ✅ Kiểm tra login trước khi hiển thị sidebar
 if (!isset($_SESSION['username'])) {
+    header("Location: pages/login.php");
+    exit;
+}
+
+$role = $_SESSION['PhanQuyen'] ?? '';
 ?>
 
 <!-- Sidebar -->
@@ -37,12 +40,8 @@ if (!isset($_SESSION['username'])) {
         <!-- Divider -->
         <hr class="sidebar-divider">
 
-        <!-- Heading -->
-        <div class="sidebar-heading">
-            Tùy chọn
-        </div>
+        <div class="sidebar-heading">Tùy chọn</div>
 
-        <!-- Quản lý nhân viên -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/QuanLyNhanVien.php">
                 <i class="fas fa-fw fa-users"></i>
@@ -50,7 +49,6 @@ if (!isset($_SESSION['username'])) {
             </a>
         </li>
 
-        <!-- Quản lý bánh -->
         <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBanh" aria-expanded="false" aria-controls="collapseBanh">
                 <i class="fas fa-fw fa-bread-slice"></i>
@@ -64,7 +62,6 @@ if (!isset($_SESSION['username'])) {
             </div>
         </li>
 
-        <!-- Quản lý khách hàng -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/QuanLyKhachHang.php">
                 <i class="fas fa-fw fa-user"></i>
@@ -72,7 +69,6 @@ if (!isset($_SESSION['username'])) {
             </a>
         </li>
 
-        <!-- Quản lý đơn hàng -->
         <li class="nav-item">
             <a class="nav-link" href="/pages/QuanLyDonHang.php">
                 <i class="fas fa-fw fa-box"></i>
@@ -80,7 +76,6 @@ if (!isset($_SESSION['username'])) {
             </a>
         </li>
 
-        <!-- Thống kê & Báo cáo -->
         <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThongKe" aria-expanded="false" aria-controls="collapseThongKe">
                 <i class="fas fa-fw fa-chart-bar"></i>
@@ -95,12 +90,38 @@ if (!isset($_SESSION['username'])) {
         </li>
     <?php endif; ?>
 
-    <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 
-    <!-- Sidebar Toggler -->
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>
 </ul>
-<!-- End of Sidebar -->
+
+ <div id="content-wrapper" class="d-flex flex-column">
+
+        <!-- Main Content -->
+        <div id="content">
+
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown no-arrow">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small">Admin</span>
+                            <img class="img-profile rounded-circle" src="../img/undraw_profile.svg">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                            aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Đăng xuất
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
