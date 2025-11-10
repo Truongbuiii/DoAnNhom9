@@ -3,49 +3,17 @@ session_start();
 
 include 'db/connect.php';
 $conn->set_charset("utf8");
+
+include 'include/header.php';
+include 'include/sidebar.php';
 // ==========================
-// XỬ LÝ BỎ CHỌN KHÁCH HÀNG TRƯỚC KHI GỬI HTML
+// Bỏ chọn khách hàng
 // ==========================
-if(isset($_GET['remove_customer'])){
+if(isset($_POST['clear_customer'])){
     unset($_SESSION['selected_customer']);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
+    unset($_SESSION['new_customer']);
 }
 
-// ==========================
-// XỬ LÝ THÊM KHÁCH HÀNG
-// ==========================
-if(isset($_POST['add_customer'])){
-    $tenKH = trim($_POST['TenKH']);
-    $sdt = trim($_POST['SDT']);
-    if($tenKH != ''){
-        $tenKH_safe = mysqli_real_escape_string($conn, $tenKH);
-        $sdt_safe = mysqli_real_escape_string($conn, $sdt);
-        mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH_safe','$sdt_safe')");
-    }
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
-}
-
-// ==========================
-// Thêm khách hàng mới tạm tính (chưa lưu DB)
-// ==========================
-if(isset($_POST['add_customer'])){
-    $tenKH = trim($_POST['TenKH']);
-    $sdt = trim($_POST['SDT']);
-    if($tenKH != ''){
-        // Lưu tạm vào session
-        $_SESSION['selected_customer'] = [
-            'HoTen' => $tenKH,
-            'SDT' => $sdt,
-            'is_new' => true  // đánh dấu là khách hàng mới
-        ];
-    }
-
-    // Chuyển hướng để tránh reload lại form
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
-}
 
 // ==========================
 // Xử lý thêm sản phẩm
@@ -84,59 +52,70 @@ if(isset($_POST['select_customer'])){
 }
 
 // ==========================
+// ==========================
 // Thêm khách hàng mới
 // ==========================
-if(isset($_POST['add_customer'])){
-    $tenKH = trim($_POST['TenKH']);
-    $sdt = trim($_POST['SDT']);
+// Chọn khách hàng mới vừa nhập
+// Chọn khách hàng mới vừa nhập (lưu tạm session, chưa lưu DB)
+if(isset($_POST['select_new_customer'])){
+    $tenKH = trim($_POST['TenKH'] ?? '');
+    $sdt   = trim($_POST['SDT'] ?? '');
+
     if($tenKH != ''){
-        mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH','$sdt')");
+        $_SESSION['new_customer'] = [
+            'HoTen' => $tenKH,
+            'SDT' => $sdt
+        ];
+        unset($_SESSION['selected_customer']); // nếu trước đó chọn khách cũ
     }
-    // Chuyển hướng sau khi thêm xong để tránh thêm trùng khi reload
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
 }
+
 
 // ==========================
 // Thanh toán
 // ==========================
+
 if(isset($_POST['checkout'])){
-    if(!isset($_SESSION['selected_customer'])){
-        echo "<script>alert('Vui lòng chọn khách hàng!');</script>";
-    } else {
-        $kh = $_SESSION['selected_customer'];
+    $maKH = null;
 
-        // Nếu khách hàng mới, lưu vào DB
-        if(isset($kh['is_new']) && $kh['is_new'] === true){
-            $tenKH_safe = mysqli_real_escape_string($conn, $kh['HoTen']);
-            $sdt_safe = mysqli_real_escape_string($conn, $kh['SDT']);
-            mysqli_query($conn,"INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH_safe','$sdt_safe')");
-            $maKH = mysqli_insert_id($conn);
-        } else {
-            $maKH = intval($kh['MaKH']);
-        }
-
-        // Tạo đơn hàng
-        mysqli_query($conn,"INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) VALUES(NOW(),0,$maKH,{$_SESSION['MaNV']})");
-        $maDon = mysqli_insert_id($conn);
-        $tongTien = 0;
-
-        foreach($_SESSION['cart'] as $maBanh => $item){
-            $tongTien += $item['ThanhTien'];
-            mysqli_query($conn,"INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
-                                VALUES($maDon,$maBanh,{$item['SoLuong']},{$item['DonGia']},{$item['ThanhTien']})");
-        }
-
-        mysqli_query($conn,"UPDATE DonHang SET TongTien=$tongTien WHERE MaDon=$maDon");
-
-        // Xóa session
-        unset($_SESSION['cart']);
-        unset($_SESSION['selected_customer']);
-
-        echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
+    if(isset($_SESSION['new_customer'])){
+        $tenKH = $_SESSION['new_customer']['HoTen'];
+        $sdt   = $_SESSION['new_customer']['SDT'];
+        mysqli_query($conn, "INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH', '$sdt')");
+        $maKH = mysqli_insert_id($conn);
     }
-}
+    elseif(isset($_POST['MaKH']) && intval($_POST['MaKH']) > 0){
+        $maKH = intval($_POST['MaKH']);
+    }
 
+    if(!$maKH){
+        echo "<script>alert('Vui lòng chọn hoặc nhập khách hàng!');</script>";
+        exit;
+    }
+
+    // Lưu đơn hàng
+    $tongTien = 0;
+    foreach($_SESSION['cart'] as $item){
+        $tongTien += $item['ThanhTien'];
+    }
+
+    $maNV = $_SESSION['MaNV'];
+    mysqli_query($conn,"INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) 
+                        VALUES(NOW(), $tongTien, $maKH, $maNV)");
+    $maDon = mysqli_insert_id($conn);
+
+    foreach($_SESSION['cart'] as $maBanh => $item){
+        mysqli_query($conn,"INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
+                            VALUES($maDon, $maBanh, {$item['SoLuong']}, {$item['DonGia']}, {$item['ThanhTien']})");
+    }
+
+    // Xóa session tạm
+    unset($_SESSION['cart']);
+    unset($_SESSION['selected_customer']);
+    unset($_SESSION['new_customer']);
+
+    echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
+}
 
 // ==========================
 // Dữ liệu hiển thị
@@ -150,10 +129,6 @@ $selectedCustomer = null;
 if(isset($_SESSION['selected_customer'])){
     $selectedCustomer = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM KhachHang WHERE MaKH=".$_SESSION['selected_customer']));
 }
-include 'include/header.php';
-include 'include/sidebar.php';
-
-
 ?>
 
 <style>
@@ -177,34 +152,81 @@ include 'include/sidebar.php';
         <!-- BÊN TRÁI -->
         <div class="col-lg-7 left-column">
             <!-- KHÁCH HÀNG -->
-            <div class="card left-top">
-                <div class="card-header"><strong>Chọn khách hàng</strong></div>
-                <div class="card-body">
-                    <form method="post" class="mb-3 d-flex">
-                        <select name="MaKH" class="form-select me-2">
-                            <option value="">-- Chọn khách hàng có sẵn --</option>
-                            <?php while($kh = mysqli_fetch_assoc($khachHangRes)): ?>
-                                <option value="<?= $kh['MaKH'] ?>" <?= isset($_SESSION['selected_customer']) && $_SESSION['selected_customer']==$kh['MaKH'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($kh['HoTen']) ?> (<?= $kh['SDT'] ?>)
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
-                        <button name="select_customer" class="btn btn-primary">Chọn</button>
-                    </form>
+<!-- KHÁCH HÀNG -->
+<div class="card left-top">
+  <div class="card-header"><strong>Thông tin khách hàng</strong></div>
+  <div class="card-body">
 
-                    <form method="post" class="row g-2">
-                        <div class="col-md-5">
-                            <input type="text" name="TenKH" class="form-control" placeholder="Tên KH mới">
-                        </div>
-                        <div class="col-md-5">
-                            <input type="text" name="SDT" class="form-control" placeholder="SĐT">
-                        </div>
-                        <div class="col-md-2">
-                            <button name="add_customer" class="btn btn-success w-100">Thêm</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <!-- Lựa chọn loại khách hàng -->
+    <div class="mb-3">
+      <label class="form-label"><strong>Chọn loại khách hàng:</strong></label><br>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="customer_type" id="existing_customer" value="existing">
+        <label class="form-check-label" for="existing_customer">Khách hàng có sẵn</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="customer_type" id="new_customer" value="new">
+        <label class="form-check-label" for="new_customer">Thêm khách hàng mới</label>
+      </div>
+    </div>
+
+    <!-- KHÁCH HÀNG CÓ SẴN -->
+    <div id="existing_customer_form" style="display:none;">
+      <form method="post" class="mb-3 d-flex">
+        <select name="MaKH" class="form-select me-2">
+          <option value="">-- Chọn khách hàng có sẵn --</option>
+          <?php
+          mysqli_data_seek($khachHangRes, 0); // reset con trỏ nếu đã duyệt
+          while($kh = mysqli_fetch_assoc($khachHangRes)): ?>
+            <option value="<?= $kh['MaKH'] ?>" <?= isset($_SESSION['selected_customer']) && $_SESSION['selected_customer']==$kh['MaKH'] ? 'selected' : '' ?>>
+              <?= htmlspecialchars($kh['HoTen']) ?> (<?= $kh['SDT'] ?>)
+            </option>
+          <?php endwhile; ?>
+        </select>
+    <button type="submit" name="select_customer" class="btn btn-primary">Chọn</button>
+      </form>
+    </div>
+
+   <!-- KHÁCH HÀNG MỚI -->
+
+<div id="new_customer_form" style="display:none;">
+  <form method="post" class="row g-2">
+    <div class="col-md-5">
+      <input type="text" name="TenKH" class="form-control" placeholder="Tên khách hàng mới" id="TenKH" required>
+    </div>
+    <div class="col-md-5">
+      <input type="text" name="SDT" class="form-control" placeholder="Số điện thoại" id="SDT">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" name="select_new_customer" class="btn btn-success w-100">Chọn</button>
+    </div>
+  </form>
+</div>
+
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const existingForm = document.getElementById('existing_customer_form');
+  const newForm = document.getElementById('new_customer_form');
+  const radios = document.getElementsByName('customer_type');
+
+  radios.forEach(radio => {
+    radio.addEventListener('change', function(){
+      if(this.value === 'existing'){
+        existingForm.style.display = 'block';
+        newForm.style.display = 'none';
+      } else if(this.value === 'new'){
+        newForm.style.display = 'block';
+        existingForm.style.display = 'none';
+      }
+    });
+  });
+});
+</script>
+
 
             <!-- DANH SÁCH SẢN PHẨM -->
             <div class="card left-bottom mt-3">
@@ -247,16 +269,29 @@ include 'include/sidebar.php';
 
         <!-- BÊN PHẢI -->
         <div class="col-lg-5 right-column">
-            <div class="mb-3 p-2 border rounded" style="background-color:#f8f9fa;">
-    <?php if($selectedCustomer): ?>
-        <p class="mb-1"><strong>Khách hàng:</strong> <?= htmlspecialchars($selectedCustomer['HoTen']) ?></p>
-        <p class="mb-1"><strong>SĐT:</strong> <?= htmlspecialchars($selectedCustomer['SDT']) ?></p>
-        <a href="?remove_customer=1" class="btn btn-sm btn-warning mt-1">Bỏ chọn</a>
-    <?php else: ?>
-        <p class="mb-0 text-muted"><em>Chưa chọn khách hàng</em></p>
-    <?php endif; ?>
+            <div class="card h-100">
+                <div class="card-header"><strong>Đơn hàng tạm</strong></div>
+   <div class="mb-2">
+<?php
+if(isset($_SESSION['selected_customer'])){
+    $selectedCustomer = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM KhachHang WHERE MaKH=".$_SESSION['selected_customer']));
+    echo "<h6>Khách hàng: <strong>".htmlspecialchars($selectedCustomer['HoTen'])."</strong></h6>";
+    echo "<h6>Số điện thoại: <strong>".htmlspecialchars($selectedCustomer['SDT'])."</strong></h6>";
+}
+elseif(isset($_SESSION['new_customer'])){
+    echo "<h6>Khách hàng mới: <strong>".htmlspecialchars($_SESSION['new_customer']['HoTen'])."</strong></h6>";
+    echo "<h6>Số điện thoại: <strong>".htmlspecialchars($_SESSION['new_customer']['SDT'])."</strong></h6>";
+}
+else{
+    echo "<h6><em>Chưa chọn khách hàng</em></h6>";
+}
+?>
+<?php if(isset($_SESSION['selected_customer']) || isset($_SESSION['new_customer'])): ?>
+    <form method="post" style="display:inline;">
+        <button type="submit" name="clear_customer" class="btn btn-sm btn-warning">Bỏ chọn khách hàng</button>
+    </form>
+<?php endif; ?>
 </div>
-
 
                     <hr>
                     <table class="table table-bordered text-center">
