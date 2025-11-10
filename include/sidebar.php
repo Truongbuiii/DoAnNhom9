@@ -6,6 +6,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Lấy quyền người dùng (nếu có)
 $role = isset($_SESSION['PhanQuyen']) ? $_SESSION['PhanQuyen'] : '';
+if (!isset($_SESSION['username'])) {
 ?>
 
 <!-- Sidebar -->

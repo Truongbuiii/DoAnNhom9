@@ -1,6 +1,6 @@
 <?php
 include_once __DIR__ . '/../db/connect.php';
-session_start();
+
 
 ?>
 
@@ -28,4 +28,4 @@ session_start();
 <body id="page-top">
 
     <!-- Page Wrapper -->
-    <div id="wrapper">
+    <div id="wrapper">  
