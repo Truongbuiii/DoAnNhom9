@@ -66,12 +66,12 @@ if (isset($_GET['xoa'])) {
         if ($conn->query("DELETE FROM LoaiBanh WHERE MaLoaiBanh = $ma")) {
             echo "
             <div id='overlay'></div>
-            <div class='popup' style='background:#198754;color:#fff;'> ✅ Đã xóa loại bánh thành công! </div>
+            <div class='popup' style='background:#198754;color:#fff;'>Đã xóa loại bánh thành công! </div>
             <script>setTimeout(()=> window.location.href='QuanLyLoaiBanh.php', 1000);</script>";
         } else {
             echo "
             <div id='overlay'></div>
-            <div class='popup' style='background:#dc3545;color:#fff;'> ❌ Lỗi khi xóa: " . htmlspecialchars($conn->error) . " </div>";
+            <div class='popup' style='background:#dc3545;color:#fff;'>Lỗi khi xóa: " . htmlspecialchars($conn->error) . " </div>";
         }
     }
     exit;
@@ -83,11 +83,11 @@ if (isset($_GET['khoa'])) {
     if ($conn->query("UPDATE LoaiBanh SET TinhTrang = 0 WHERE MaLoaiBanh = $ma")) {
         echo "<style>#overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; }</style>";
         echo "<div id='overlay'></div>";
-        echo "<div style='position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1055; background:#ffc107; padding:20px 26px; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,0.25);'>🔒 Đã khóa loại bánh thành công!</div>";
+        echo "<div style='position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1055; background:#ffc107; padding:20px 26px; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,0.25);'>Đã khóa loại bánh thành công!</div>";
         echo "<script>setTimeout(()=> window.location.href='QuanLyLoaiBanh.php', 1000);</script>";
         exit;
     } else {
-        echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi khóa loại bánh: " . htmlspecialchars($conn->error) . "</div>";
+        echo "<div class='alert alert-danger mt-3'>Lỗi khi khóa loại bánh: " . htmlspecialchars($conn->error) . "</div>";
     }
 }
 ?>
@@ -100,10 +100,34 @@ if (isset($_GET['khoa'])) {
         <div class="alert alert-danger"><?php echo $errMsg; ?></div>
     <?php endif; ?>
 
-   <!-- Form Thêm + Tìm kiếm trên cùng 1 dòng -->
-<div class="card mb-4 shadow-sm p-4">
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
-        <!-- Thêm loại bánh (bên trái) -->
+ 
+
+<!-- TÌM KIẾM LOẠI BÁNH (trải rộng, không khung bao) -->
+<form method="GET" action="" class="d-flex flex-wrap align-items-end gap-3 mb-4">
+    <div style="min-width:250px;">
+        <label for="tim" class="form-label mb-1 fw-bold">Tìm kiếm loại bánh</label>
+        <input type="text" id="tim" name="tim" class="form-control" 
+               placeholder="Nhập tên loại bánh..." 
+               value="<?php echo htmlspecialchars($_GET['tim'] ?? '') ?>">
+    </div>
+    
+    <div class="d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Tìm
+        </button>
+        <?php if (!empty($_GET['tim'])): ?>
+            <a href="QuanLyLoaiBanh.php" class="btn btn-secondary">Xóa</a>
+        <?php endif; ?>
+    </div>
+</form>
+
+
+<!-- DANH SÁCH LOẠI BÁNH + FORM THÊM (nằm bên phải tiêu đề) -->
+<div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+        <h5 class="text-primary mb-2 mb-md-0">Danh sách loại bánh</h5>
+
+        <!-- Form thêm loại bánh (nằm bên phải) -->
         <form method="POST" action="" class="d-flex gap-2 align-items-end flex-wrap">
             <div style="min-width:200px;">
                 <label for="tenLoai" class="form-label mb-0">Tên loại bánh</label>
@@ -111,74 +135,65 @@ if (isset($_GET['khoa'])) {
             </div>
             <button type="submit" name="them" class="btn btn-success">Thêm</button>
         </form>
-
-        <!-- Tìm kiếm loại bánh (bên phải) -->
-        <form method="GET" action="" class="d-flex gap-2 align-items-end flex-wrap">
-            <div style="min-width:200px;">
-                <label for="tim" class="form-label mb-0">Tìm kiếm</label>
-                <input type="text" id="tim" name="tim" class="form-control" placeholder="Nhập tên loại bánh..." value="<?php echo htmlspecialchars($_GET['tim'] ?? '') ?>">
-            </div>
-            <button type="submit" class="btn btn-primary">🔍</button>
-            <?php if (!empty($_GET['tim'])): ?>
-                <a href="QuanLyLoaiBanh.php" class="btn btn-secondary">Xóa</a>
-            <?php endif; ?>
-        </form>
     </div>
+
+    <!-- Bảng hiển thị loại bánh -->
+    <table class="table table-bordered text-center align-middle table-sm">
+        <thead class="table-primary">
+            <tr>
+                <th>Mã loại</th>
+                <th>Tên loại bánh</th>
+                <th>Tình trạng</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $tim = $conn->real_escape_string(trim($_GET['tim'] ?? ''));
+            $sql = "SELECT * FROM LoaiBanh";
+            if (!empty($tim)) {
+                $sql .= " WHERE TenLoaiBanh LIKE '%$tim%'";
+            }
+            $sql .= " ORDER BY MaLoaiBanh ASC";
+
+            $result = $conn->query($sql);
+            if ($result && $result->num_rows > 0) {
+                while ($loai = $result->fetch_assoc()) {
+                    $ma = (int)$loai['MaLoaiBanh'];
+                    $ten = htmlspecialchars($loai['TenLoaiBanh']);
+                    $tinhtrang = (int)$loai['TinhTrang'];
+                    $badge = $tinhtrang == 1
+                        ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
+                        : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
+
+                    echo "
+                    <tr>
+                        <td>{$ma}</td>
+                        <td>{$ten}</td>
+                        <td>{$badge}</td>
+                        <td>
+                            <button class='btn btn-warning btn-sm btn-edit me-2' 
+                                    data-id='{$ma}' 
+                                    data-ten=\"" . htmlspecialchars($loai['TenLoaiBanh'], ENT_QUOTES) . "\" 
+                                    data-tinhtrang='{$tinhtrang}'>
+                                <i class='fas fa-edit'></i> Sửa
+                            </button>
+                            <a href='QuanLyLoaiBanh.php?xoa={$ma}&ten=" . urlencode($loai['TenLoaiBanh']) . "' 
+                               class='btn btn-danger btn-sm' 
+                               onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa loại bánh " . addslashes($loai['TenLoaiBanh']) . " không?\")'>
+                                <i class='fas fa-trash'></i> Xóa
+                            </a>
+                        </td>
+                    </tr>";
+                }
+            } else {
+                echo '<tr><td colspan="4">Chưa có loại bánh nào.</td></tr>';
+            }
+            ?>
+        </tbody>
+    </table>
 </div>
 
-
-
-    <!-- Danh sách loại bánh -->
-    <div class="card shadow-sm p-4 mb-4">
-        <h5 class="mb-3 text-primary">Danh sách loại bánh</h5>
-        <table class="table table-bordered text-center align-middle table-sm">
-            <thead class="table-primary">
-                <tr>
-                    <th>Mã loại</th>
-                    <th>Tên loại bánh</th>
-                    <th>Tình trạng</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $tim = $conn->real_escape_string(trim($_GET['tim'] ?? ''));
-                $sql = "SELECT * FROM LoaiBanh";
-                if (!empty($tim)) {
-                    $sql .= " WHERE TenLoaiBanh LIKE '%$tim%'";
-                }
-                $sql .= " ORDER BY MaLoaiBanh ASC";
-
-                $result = $conn->query($sql);
-                if ($result && $result->num_rows > 0) {
-                    while ($loai = $result->fetch_assoc()) {
-                        $ma = (int)$loai['MaLoaiBanh'];
-                        $ten = htmlspecialchars($loai['TenLoaiBanh']);
-                        $tinhtrang = (int)$loai['TinhTrang'];
-                        $badge = $tinhtrang == 1 ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>" : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
-                        echo "
-                        <tr>
-                            <td>{$ma}</td>
-                            <td>{$ten}</td>
-                            <td>{$badge}</td>
-                            <td>
-                                <button class='btn btn-warning btn-sm btn-edit me-2' data-id='{$ma}' data-ten=\"" . htmlspecialchars($loai['TenLoaiBanh'], ENT_QUOTES) . "\" data-tinhtrang='{$tinhtrang}'>
-                                    <i class='fas fa-edit'></i> Sửa
-                                </button>
-                                <a href='QuanLyLoaiBanh.php?xoa={$ma}&ten=" . urlencode($loai['TenLoaiBanh']) . "' class='btn btn-danger btn-sm' onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa loại bánh " . addslashes($loai['TenLoaiBanh']) . " không?\")'>
-                                    🗑️ Xóa
-                                </a>
-                            </td>
-                        </tr>";
-                    }
-                } else {
-                    echo '<tr><td colspan="4">Chưa có loại bánh nào.</td></tr>';
-                }
-                ?>
-            </tbody>
-        </table>
-    </div>
-</div>
 
 <!-- Modal Sửa loại bánh -->
 <div class="modal fade" id="modalSuaLoaiBanh" tabindex="-1" aria-labelledby="modalSuaLoaiBanhLabel" aria-hidden="true">
@@ -213,6 +228,11 @@ if (isset($_GET['khoa'])) {
 </div>
 
 <style>
+    form.d-flex.flex-wrap.gap-3 {
+    justify-content: flex-start;
+    gap: 1rem 1.5rem;
+}
+
 .form-select, .form-control {
     font-size: 15px;
     padding: 8px 12px;

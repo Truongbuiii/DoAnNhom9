@@ -14,7 +14,7 @@ if (isset($_GET['xoa'])) {
         // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
         echo "
         <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
-            <h5>🚫 Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
+            <h5>Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
             <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
             <div class='d-flex justify-content-center gap-2 mt-3'>
                 <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
@@ -27,7 +27,7 @@ if (isset($_GET['xoa'])) {
         if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
             echo "
             <div class='position-fixed top-50 start-50 translate-middle bg-success text-white p-4 rounded shadow text-center' style='z-index:1055;'>
-                ✅ Đã xóa khách hàng thành công!
+                 Đã xóa khách hàng thành công!
             </div>
             <script>
                 setTimeout(() => window.location.href='QuanLyKhachHang.php', 1200);
@@ -35,7 +35,7 @@ if (isset($_GET['xoa'])) {
         } else {
             echo "
             <div class='alert alert-danger mt-3'>
-                ⚠️ Lỗi khi xóa khách hàng: " . htmlspecialchars($conn->error) . "
+                 Lỗi khi xóa khách hàng: " . htmlspecialchars($conn->error) . "
             </div>";
         }
     }
@@ -53,7 +53,7 @@ if (isset($_GET['khoa'])) {
             setTimeout(() => window.location.href='QuanLyKhachHang.php', 1200);
         </script>";
     } else {
-        echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi khóa khách hàng.</div>";
+        echo "<div class='alert alert-danger mt-3'> Lỗi khi khóa khách hàng.</div>";
     }
 }
 ?>
@@ -70,8 +70,9 @@ if (isset($_GET['khoa'])) {
 
     <!-- Form tìm kiếm gọn bên phải -->
     <form method="GET" class="d-flex align-items-center gap-1">
-        <input type="text" name="timkiem" class="form-control form-control-sm" placeholder="Họ tên/SĐT" value="<?php echo htmlspecialchars($_GET['timkiem'] ?? ''); ?>" style="width: 300px;">
-        <button type="submit" class="btn btn-primary btn-sm">🔍</button>
+        <input type="text" name="timkiem" class="form-control form-control-sm" placeholder="Hãy nhập Họ tên hoặc SĐT" value="<?php echo htmlspecialchars($_GET['timkiem'] ?? ''); ?>" style="width: 300px;">
+        <button type="submit" class="btn btn-primary btn-sm">      <i class="fas fa-search"></i> Tìm
+</button>
         <?php if (!empty($_GET['timkiem'])): ?>
             <a href="QuanLyKhachHang.php" class="btn btn-secondary btn-sm">Xóa</a>
         <?php endif; ?>
@@ -120,7 +121,7 @@ if (isset($_GET['khoa'])) {
 
         if ($conn->query($sql) === TRUE) {
             echo "<script>
-                alert('🎉 Thêm khách hàng mới thành công!');
+                alert('Thêm khách hàng mới thành công!');
                 window.location.href = 'QuanLyKhachHang.php';
             </script>";
             exit;
@@ -142,12 +143,12 @@ if (isset($_GET['khoa'])) {
 
         if ($conn->query($sql) === TRUE) {
             echo "<script>
-                alert('✅ Cập nhật khách hàng thành công!');
+                alert('Cập nhật khách hàng thành công!');
                 window.location.href = 'QuanLyKhachHang.php';
             </script>";
             exit;
         } else {
-            echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi cập nhật: " . $conn->error . "</div>";
+            echo "<div class='alert alert-danger mt-3'>Lỗi khi cập nhật: " . $conn->error . "</div>";
         }
     }
 
@@ -206,8 +207,8 @@ if (isset($_GET['khoa'])) {
                                 </button>
                                 <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
                                    class='btn btn-danger btn-sm'
-                                   onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
-                                   🗑️ Xóa
+                                   onclick='return confirm(\"Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
+                                    <i class='fas fa-trash'></i> Xóa
                                 </a>
                             </td>
                         </tr>";

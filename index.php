@@ -241,4 +241,5 @@ if(isset($_SESSION['selected_customer'])){
     </div>
 </div>
 
+
 <?php include 'include/footer.php'; ?>

@@ -160,8 +160,9 @@ if ($search !== "") {
   <div class="modal-dialog">
     <form method="POST" action="nhanvien_update.php" class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Sửa thông tin nhân viên</h5>
-        <button type="button" class="btn-close btn btn-light border border-danger text-danger" data-dismiss="modal">×</button>
+       <h5 class="modal-title">Sửa thông tin nhân viên</h5>
+<a href="quanlynhanvien.php" class="btn btn-light border border-danger text-danger" aria-label="Close">×</a>
+
       </div>
 
       <div class="modal-body">

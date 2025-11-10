@@ -85,7 +85,7 @@ if (isset($_GET['xoa'])) {
         $tenEsc = htmlspecialchars($tenBanh);
         echo "
         <div class='popup'>
-            <h5>⚠️ Bánh \"{$tenEsc}\" đã từng được bán!</h5>
+            <h5>Bánh \"{$tenEsc}\" đã từng được bán!</h5>
             <p>Bạn có muốn <b>ẩn (khóa)</b> bánh này không?</p>
             <div class='d-flex justify-content-center gap-2 mt-3'>
                 <a href='QuanLyThongTinBanh.php?khoa={$maBanh}' class='btn btn-warning btn-popup'>Khóa</a>
@@ -94,10 +94,10 @@ if (isset($_GET['xoa'])) {
         </div>";
     } else {
         if ($conn->query("DELETE FROM ThongTinBanh WHERE MaBanh = $maBanh")) {
-            echo "<div class='popup' style='background:#198754;color:#fff;'>✅ Đã xóa bánh thành công!</div>";
+            echo "<div class='popup' style='background:#198754;color:#fff;'>Đã xóa bánh thành công!</div>";
             echo "<script>setTimeout(()=> window.location.href='QuanLyThongTinBanh.php', 1000);</script>";
         } else {
-            echo "<div class='popup' style='background:#dc3545;color:#fff;'>❌ Lỗi khi xóa: ".htmlspecialchars($conn->error)."</div>";
+            echo "<div class='popup' style='background:#dc3545;color:#fff;'>Lỗi khi xóa: ".htmlspecialchars($conn->error)."</div>";
         }
     }
     exit;
@@ -108,11 +108,11 @@ if (isset($_GET['khoa'])) {
     $maBanh = intval($_GET['khoa']);
     if ($conn->query("UPDATE ThongTinBanh SET TinhTrang = 0 WHERE MaBanh = $maBanh")) {
         echo "<div id='overlay'></div>";
-        echo "<div class='popup' style='background:#ffc107;color:#000;'>🔒 Đã khóa bánh thành công!</div>";
+        echo "<div class='popup' style='background:#ffc107;color:#000;'>Đã khóa bánh thành công!</div>";
         echo "<script>setTimeout(()=> window.location.href='QuanLyThongTinBanh.php', 1000);</script>";
         exit;
     } else {
-        echo "<div class='alert alert-danger mt-3'>⚠️ Lỗi khi khóa bánh: " . htmlspecialchars($conn->error) . "</div>";
+        echo "<div class='alert alert-danger mt-3'>Lỗi khi khóa bánh: " . htmlspecialchars($conn->error) . "</div>";
     }
 }
 ?>
@@ -120,28 +120,46 @@ if (isset($_GET['khoa'])) {
 <div class="container mt-4">
     <h2 class="text-center mb-4 text-primary">QUẢN LÝ THÔNG TIN BÁNH</h2>
 
-    <!-- Nút thêm bánh -->
-    <div class="mb-3 text-end">
-        <a href="themBanh.php" class="btn btn-success">+ Thêm bánh mới</a>
+ <!-- THANH TÌM KIẾM (ngoài card, giãn cách thoáng) -->
+<form method="GET" class="d-flex flex-wrap align-items-end gap-4 mb-4">
+    <!-- Ô tìm kiếm -->
+    <div style="min-width:300px;">
+        <label for="search" class="form-label mb-1 fw-semibold">Tìm kiếm bánh</label>
+        <input type="text" id="search" name="search"
+               class="form-control"
+               placeholder="Nhập tên bánh hoặc loại bánh..."
+               value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
     </div>
+
+    <!-- Nhóm nút -->
+    <div class="d-flex align-items-end gap-3">
+        <button class="btn btn-primary px-4" type="submit"> <i class="fas fa-search"></i> Tìm</button>
+
+        <?php if (!empty($_GET['search'])): ?>
+            <a href="QuanLyThongTinBanh.php" class="btn btn-secondary px-4">Xóa</a>
+        <?php endif; ?>
+    </div>
+</form>
+
+
+<style>
+form.d-flex.flex-wrap.align-items-end.mb-4 {
+    gap: 20px !important; /* Khoảng cách giữa input và các nút */
+}
+form.d-flex.flex-wrap.align-items-end.mb-4 button,
+form.d-flex.flex-wrap.align-items-end.mb-4 a {
+    margin-left: 8px;
+}
+</style>
 
     <?php if (!empty($errMsg)) echo "<div class='alert alert-danger'>$errMsg</div>"; ?>
 
-  <div class="card shadow-sm p-4">
-  <h5 class="text-primary mb-3">Danh sách bánh</h5>
-
-              <form method="GET" class="mb-3 d-flex align-items-center">
-    <input type="text" name="search" 
-                class="form-control w-50 mr-3" 
-           placeholder="Tìm theo tên bánh hoặc loại bánh..."
-           value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-          <button class="btn btn-primary mr-2" type="submit">
-      <i class="fas fa-search"></i> Tìm
-    </button>
-    <a href="QuanLyThongTinBanh.php" class="btn btn-secondary">
-      <i class="fas fa-undo"></i> Làm mới
-    </a>
-  </form>
+    <!-- KHUNG DANH SÁCH BÁNH -->
+    <div class="card shadow-sm p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+            <h5 class="text-primary mb-2 mb-md-0">Danh sách bánh</h5>
+            <a href="themBanh.php" class="btn btn-success px-4">Thêm bánh mới</a>
+        </div>
 
         <table class="table table-bordered text-center align-middle">
             <thead class="table-primary">
@@ -158,17 +176,17 @@ if (isset($_GET['khoa'])) {
             </thead>
             <tbody>
             <?php
-          $search = $conn->real_escape_string($_GET['search'] ?? '');
+            $search = $conn->real_escape_string($_GET['search'] ?? '');
 
-$sql = "SELECT tb.*, lb.TenLoaiBanh 
-        FROM ThongTinBanh tb
-        JOIN LoaiBanh lb ON tb.MaLoaiBanh = lb.MaLoaiBanh";
+            $sql = "SELECT tb.*, lb.TenLoaiBanh 
+                    FROM ThongTinBanh tb
+                    JOIN LoaiBanh lb ON tb.MaLoaiBanh = lb.MaLoaiBanh";
 
-if ($search !== '') {
-    $sql .= " WHERE tb.TenBanh LIKE '%$search%' OR lb.TenLoaiBanh LIKE '%$search%'";
-}
+            if ($search !== '') {
+                $sql .= " WHERE tb.TenBanh LIKE '%$search%' OR lb.TenLoaiBanh LIKE '%$search%'";
+            }
 
-$sql .= " ORDER BY tb.MaBanh ASC";
+            $sql .= " ORDER BY tb.MaBanh ASC";
 
             $res = $conn->query($sql);
             if ($res && $res->num_rows > 0) {
@@ -177,24 +195,27 @@ $sql .= " ORDER BY tb.MaBanh ASC";
                     $ten = htmlspecialchars($row['TenBanh']);
                     $loai = htmlspecialchars($row['TenLoaiBanh']);
                     $maLoai = $row['MaLoaiBanh'];
-                    $gia = number_format($row['Gia'],0,',','.');
+                    $gia = number_format($row['Gia'], 0, ',', '.');
                     $soluong = $row['SoLuong'];
                     $hinhAnh = $row['HinhAnh'];
                     $tinhtrang = (int)$row['TinhTrang'];
 
-                    $badge = $tinhtrang ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
-                                        : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
-                    $hinhAnhPath = "../img/".$hinhAnh;
+                    $badge = $tinhtrang
+                        ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
+                        : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
+                    $hinhAnhPath = "../img/" . $hinhAnh;
 
-                    echo "<tr>
+                    echo "
+                    <tr>
                         <td>$ma</td>
                         <td>$ten</td>
                         <td>$loai</td>
                         <td>$gia</td>
                         <td>$soluong</td>
                         <td>";
-                    echo $hinhAnh ? "<img src='$hinhAnhPath' width='60' height='60' style='object-fit:cover;border-radius:8px;'>"
-                                  : "<span class='text-muted fst-italic'>Không có ảnh</span>";
+                    echo $hinhAnh
+                        ? "<img src='$hinhAnhPath' width='60' height='60' style='object-fit:cover;border-radius:8px;'>"
+                        : "<span class='text-muted fst-italic'>Không có ảnh</span>";
                     echo "</td>
                         <td>$badge</td>
                         <td>
@@ -206,9 +227,9 @@ $sql .= " ORDER BY tb.MaBanh ASC";
                                     data-tinhtrang='$tinhtrang'
                                     data-loai='$maLoai'
                                     data-anh='$hinhAnh'>
-                                <i class='fas fa-edit'></i> Sửa
+                                Sửa
                             </button>
-                            <a href='?xoa=$ma&ten=".urlencode($ten)."' class='btn btn-danger btn-sm'>Xóa</a>
+                            <a href='?xoa=$ma&ten=" . urlencode($ten) . "' class='btn btn-danger btn-sm'>Xóa</a>
                         </td>
                     </tr>";
                 }
