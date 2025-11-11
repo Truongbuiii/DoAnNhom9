@@ -1,7 +1,6 @@
 <?php
-include '../db/connect.php';
-include '../include1/header.php';
-include '../include1/sidebar.php'; 
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
 
 // Lấy lựa chọn từ form
 $loai = $_GET['loai'] ?? '';
@@ -78,3 +77,5 @@ if ($loai) {
 
 </div>
 
+<?php include '../include/footer.php'; 
+?>

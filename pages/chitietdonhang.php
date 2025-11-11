@@ -1,7 +1,7 @@
 <?php
 include '../db/connect.php';
-include '../include1/header.php';
-include '../include1/sidebar.php';
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
 
 // ============================
 // KIỂM TRA MÃ ĐƠN HÀNG
@@ -86,7 +86,8 @@ $chiTiet = $conn->query($sqlChiTiet);
     <button class="btn btn-secondary" onclick="history.back()">Quay lại</button>
 </div>
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+ ?>
 
 
 </div>

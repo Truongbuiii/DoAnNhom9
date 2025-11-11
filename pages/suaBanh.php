@@ -1,5 +1,6 @@
-<?php include '../include1/header.php'; ?>
-<?php include '../include1/sidebar.php'; ?>
+<?php include '../include/header.php'; 
+include '../include/sidebar.php'; ?>
+
 
 <?php
 if (!isset($_GET['id'])) {
@@ -132,4 +133,5 @@ document.getElementById('hinhAnhMoi').addEventListener('change', function(event)
 });
 </script>
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+ ?>

@@ -1,7 +1,6 @@
 <?php
-include '../db/connect.php';
-include '../include1/header.php';
-include '../include1/sidebar.php'; 
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
 
 // Lấy dữ liệu từ form
 $loai = $_GET['loai'] ?? '';  
@@ -145,4 +144,5 @@ function showFields() {
 showFields();
 </script>
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+?>

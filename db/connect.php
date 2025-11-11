@@ -1,4 +1,12 @@
 <?php
+
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 2. ĐỊNH NGHĨA ĐƯỜNG DẪN GỐC
+
+define('BASE_APP_PATH', ''); // Sửa thành chuỗi rỗng
 $servername = "localhost";
 $username = "root";
 $password = "";

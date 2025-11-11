@@ -1,6 +1,8 @@
 <?php 
-include '../include1/header.php'; 
-include '../include1/sidebar.php'; 
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
+
+
 
 // 🗑️ Xử lý xóa hoặc khóa khách hàng
 if (isset($_GET['xoa'])) {
@@ -318,4 +320,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+ ?>

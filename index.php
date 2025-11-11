@@ -1,8 +1,4 @@
 <?php
-session_start();
-
-include 'db/connect.php';
-$conn->set_charset("utf8");
 
 include 'include/header.php';
 include 'include/sidebar.php';

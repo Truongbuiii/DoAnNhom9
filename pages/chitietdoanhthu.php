@@ -1,7 +1,7 @@
 <?php
 include '../db/connect.php';
-include '../include1/header.php';
-include '../include1/sidebar.php';
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
 
 $loai = $_GET['loai'] ?? '';
 $ngay = $_GET['ngay'] ?? '';
@@ -85,4 +85,5 @@ $result = $conn->query($sql);
 </div>
 
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+ ?>

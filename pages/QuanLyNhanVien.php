@@ -1,8 +1,8 @@
-<?php include '../include1/header.php'; ?>
-<?php include '../include1/sidebar.php'; ?>
-<?php
-include '../db/connect.php';
 
+<?php
+
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
 // ✅ Lấy giá trị tìm kiếm nếu có
 $search = isset($_GET['search']) ? trim($_GET['search']) : "";
 
@@ -222,4 +222,5 @@ if ($search !== "") {
   });
 </script>
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+ ?>

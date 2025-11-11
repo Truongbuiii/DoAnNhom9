@@ -1,7 +1,7 @@
 <?php
 // QuanLyLoaiBanh.php
-include '../include1/header.php';
-include '../include1/sidebar.php';
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
 
 // ======== XỬ LÝ THÊM LOẠI BÁNH ========
 if (isset($_POST['them'])) {
@@ -263,4 +263,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<?php include '../include1/footer.php'; ?>
+<?php include '../include/footer.php'; 
+ ?>

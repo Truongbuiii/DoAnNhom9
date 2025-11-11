@@ -1,5 +1,10 @@
-<?php include '../include1/header.php'; ?>
-<?php include '../include1/sidebar.php'; ?>
+<?php 
+ 
+
+// 2. Sửa đường dẫn sang thư mục 'include'
+include '../include/header.php'; 
+include '../include/sidebar.php'; 
+?>
 <?php
 $search = "";
 if (isset($_GET['search']) && $_GET['search'] != "") {
@@ -58,14 +63,11 @@ if (isset($_GET['xoa'])) {
 ?>
 
 
-    <!-- Nội dung chính -->
     <div class="container-fluid">
 
-      <!-- Tiêu đề -->
       <h1 class="h3 mb-2 text-gray-800">Quản lý đơn hàng</h1>
 
-      <!-- Thanh tìm kiếm -->
-<form method="GET" class="mb-3 d-flex align-items-center">
+      <form method="GET" class="mb-3 d-flex align-items-center">
         <input type="text" name="search" class="form-control w-50" 
                placeholder="Tìm theo mã đơn, tên khách hàng, tên nhân viên,..." 
                value="<?php echo htmlspecialchars($search); ?>">
@@ -73,7 +75,6 @@ if (isset($_GET['xoa'])) {
         <a href="QuanLyDonHang.php" class="btn btn-secondary ml-2">Làm mới</a>
       </form>
 
-      <!-- Bảng dữ liệu -->
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
           <h6 class="m-0 font-weight-bold text-primary">Danh sách đơn hàng</h6>
@@ -110,13 +111,13 @@ if (isset($_GET['xoa'])) {
                     <td>{$tenKH}</td>
                     <td>{$tenNV}</td>
                   <td>
-         <button class='btn btn-info btn-sm btn-detail' data-id='{$maDon}'>Xem</button>
+        <button class='btn btn-info btn-sm btn-detail' data-id='{$maDon}'>Xem</button>
 <a href='?xoa={$maDon}' 
-   class='btn btn-danger btn-sm btn-delete'
-   data-id='{$maDon}'
-   data-kh='{$tenKH}'
-   data-tong='{$tong}'>Xóa</a>
-          </button>
+    class='btn btn-danger btn-sm btn-delete'
+    data-id='{$maDon}'
+    data-kh='{$tenKH}'
+    data-tong='{$tong}'>Xóa</a>
+        </button>
                     </td>
                   </tr>";
         }
@@ -135,7 +136,6 @@ if (isset($_GET['xoa'])) {
   </div>
 </div>
 
-<!-- Modal xem chi tiết -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -147,7 +147,6 @@ if (isset($_GET['xoa'])) {
   </div>
 </div>
 
-<!-- Modal xác nhận xóa đơn hàng -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content border-danger">
@@ -174,6 +173,9 @@ document.querySelectorAll('.btn-detail').forEach(btn => {
     const maDon = btn.dataset.id;
     $('#detailModal').modal('show');
     document.getElementById('order-detail-content').innerHTML = '<p class="text-center text-muted">Đang tải...</p>';
+    
+    // Đường dẫn 'donhang_chitiet.php' này là tương đối
+    // Nó sẽ tìm file tại 'pages/donhang_chitiet.php', điều này là đúng
     fetch('donhang_chitiet.php?MaDon=' + maDon)
       .then(res => res.text())
       .then(data => document.getElementById('order-detail-content').innerHTML = data)
@@ -218,4 +220,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
 
 </script>
 
-<?php include '../include1/footer.php'; ?>
+<?php 
+// 3. Sửa đường dẫn sang thư mục 'include'
+include '../include/footer.php'; 
+?>
