@@ -9,38 +9,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($TenDangNhap) || empty($MatKhau)) {
         echo "<script>alert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');</script>";
     } else {
-        // ✅ Tìm nhân viên theo tên đăng nhập
         $sql = "SELECT * FROM nhanvien WHERE TenDangNhap = ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) { die("Prepare failed: " . $conn->error); }
+        
         $stmt->bind_param("s", $TenDangNhap);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
-             // Kiểm tra trạng thái tài khoản
+
+            // Kiểm tra trạng thái tài khoản
             if ($user['TinhTrang'] == 0) {
                 echo "<script>alert('Tài khoản đang bị khóa!'); window.location.href='login.php';</script>";
                 exit;
             }
 
-            // ✅ Kiểm tra mật khẩu (nếu bạn không mã hóa, dùng so sánh trực tiếp)
+            // Kiểm tra mật khẩu
             if ($MatKhau === $user['MatKhau']) {
-
-                // 🔥 Lưu thông tin vào session
                 $_SESSION['MaNV'] = $user['MaNV'];
                 $_SESSION['HoTen'] = $user['HoTen'];
                 $_SESSION['PhanQuyen'] = $user['PhanQuyen'];
                 $_SESSION['username'] = $user['TenDangNhap'];
 
-                // ✅ Chuyển hướng về trang chính
                 header("Location: ../index.php");
                 exit;
             } else {
-                echo "<script>alert('Sai mật khẩu!');</script>";
+                echo "<script>alert('Sai mật khẩu!'); window.location.href='login.php';</script>";
             }
         } else {
-            echo "<script>alert('Tên đăng nhập không tồn tại!');</script>";
+            echo "<script>alert('Tên đăng nhập không tồn tại!'); window.location.href='login.php';</script>";
         }
 
         $stmt->close();
@@ -49,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -110,3 +110,4 @@ $conn->close();
     </div>
 </body>
 </html>
+

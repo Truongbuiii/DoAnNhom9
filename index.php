@@ -3,37 +3,40 @@ session_start();
 include 'db/connect.php';
 $conn->set_charset("utf8");
 
+// ==========================
 // Kiểm tra đăng nhập
+// ==========================
 if (!isset($_SESSION['MaNV'])) {
     header("Location: pages/login.php");
     exit;
 }
 
+// ==========================
 // Kiểm tra trạng thái tài khoản
+// ==========================
 $MaNV = $_SESSION['MaNV'];
-$stmt = $conn->prepare("SELECT TinhTrang FROM nhanvien WHERE MaNV = ?");
+$stmt = $conn->prepare("SELECT TinhTrang, HoTen, PhanQuyen, TenDangNhap FROM nhanvien WHERE MaNV=?");
 $stmt->bind_param("i", $MaNV);
 $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
+$stmt->close();
 
-if (!$user || $user['TinhTrang'] != 1) { // Tài khoản bị khóa hoặc không tồn tại
+if (!$user || $user['TinhTrang'] != 1) {
     session_destroy();
     header("Location: pages/login.php?msg=locked");
     exit;
 }
-$stmt->close();
 
-// Lưu lại thông tin người dùng từ session
-$MaNV = $_SESSION['MaNV'];
-$HoTen = $_SESSION['HoTen'];
-$PhanQuyen = $_SESSION['PhanQuyen'];
-
+// ==========================
+// Lưu thông tin người dùng
+// ==========================
+$HoTen = $user['HoTen'];
+$PhanQuyen = $user['PhanQuyen'];
+$username = $user['TenDangNhap'];
 
 include 'include/header.php';
 include 'include/sidebar.php';
-
-
 // ==========================
 // Bỏ chọn khách hàng
 // ==========================
@@ -106,7 +109,7 @@ if(isset($_POST['checkout'])){
     $maKH = null;
 
     if(isset($_SESSION['new_customer'])){
-$tenKH = mysqli_real_escape_string($conn, $_SESSION['new_customer']['HoTen']);
+        $tenKH = mysqli_real_escape_string($conn, $_SESSION['new_customer']['HoTen']);
         $sdt   = mysqli_real_escape_string($conn, $_SESSION['new_customer']['SDT']);
         mysqli_query($conn, "INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH', '$sdt')");
         $maKH = mysqli_insert_id($conn);
@@ -196,7 +199,7 @@ if(isset($_SESSION['selected_customer'])){
 <div class="container-fluid">
     <div class="row">
         <!-- BÊN TRÁI -->
-<div class="col-lg-7 left-column">
+        <div class="col-lg-7 left-column">
             <!-- KHÁCH HÀNG -->
 <!-- KHÁCH HÀNG -->
 <!-- KHÁCH HÀNG -->
@@ -269,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
             <!-- DANH SÁCH SẢN PHẨM -->
             <div class="card left-bottom mt-3">
-<div class="card-header"><strong>Danh sách sản phẩm</strong></div>
+                <div class="card-header"><strong>Danh sách sản phẩm</strong></div>
                 <div class="card-body">
                     <ul class="nav nav-tabs" role="tablist">
                         <?php foreach($loaiBanhArr as $index=>$loai): ?>
@@ -320,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     echo "<h6>Số điện thoại: <strong>".htmlspecialchars($selectedCustomer['SDT'])."</strong></h6>";
                 }
                 elseif(isset($_SESSION['new_customer'])){
-echo "<h6>Khách hàng mới: <strong>".htmlspecialchars($_SESSION['new_customer']['HoTen'])."</strong></h6>";
+                    echo "<h6>Khách hàng mới: <strong>".htmlspecialchars($_SESSION['new_customer']['HoTen'])."</strong></h6>";
                     echo "<h6>Số điện thoại: <strong>".htmlspecialchars($_SESSION['new_customer']['SDT'])."</strong></h6>";
                 }
                 else{
@@ -392,4 +395,4 @@ echo "<h6>Khách hàng mới: <strong>".htmlspecialchars($_SESSION['new_customer
 </div>
 
 
-<?php include 'include/footer.php'; ?>
+<?php include 'include/footer.php'; ?>  
