@@ -15,7 +15,7 @@ if (isset($_GET['xoa'])) {
         echo "
         <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
             <h5>Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
-            <p>Bạn có muốn <b>ẩn (khóa)</b> khách hàng này không?</p>
+            <p>Bạn có muốn <b>Khóa</b> khách hàng này không?</p>
             <div class='d-flex justify-content-center gap-2 mt-3'>
                 <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
                 <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
@@ -74,7 +74,7 @@ if (isset($_GET['khoa'])) {
         <button type="submit" class="btn btn-primary btn-sm">      <i class="fas fa-search"></i> Tìm
 </button>
         <?php if (!empty($_GET['timkiem'])): ?>
-            <a href="QuanLyKhachHang.php" class="btn btn-secondary btn-sm">Xóa</a>
+            <a href="QuanLyKhachHang.php" class="btn btn-secondary btn-sm">Làm mới</a>
         <?php endif; ?>
     </form>
 </div>

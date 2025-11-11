@@ -67,7 +67,7 @@ if (isset($_GET['xoa'])) {
       <!-- Thanh tìm kiếm -->
 <form method="GET" class="mb-3 d-flex align-items-center">
         <input type="text" name="search" class="form-control w-50" 
-               placeholder="Tìm theo mã đơn hoặc mã khách hàng..." 
+               placeholder="Tìm theo mã đơn, tên khách hàng, tên nhân viên,..." 
                value="<?php echo htmlspecialchars($search); ?>">
         <button class="btn btn-primary ml-2" type="submit"><i class="fas fa-search"></i> Tìm</button>
         <a href="QuanLyDonHang.php" class="btn btn-secondary ml-2">Làm mới</a>
