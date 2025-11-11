@@ -18,6 +18,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
+             // Kiểm tra trạng thái tài khoản
+            if ($user['TinhTrang'] == 0) {
+                echo "<script>alert('Tài khoản đang bị khóa!'); window.location.href='login.php';</script>";
+                exit;
+            }
 
             // ✅ Kiểm tra mật khẩu (nếu bạn không mã hóa, dùng so sánh trực tiếp)
             if ($MatKhau === $user['MatKhau']) {
@@ -85,7 +90,7 @@ $conn->close();
             <div class="text-center">
                 <h1>Đăng nhập vào hệ thống</h1>
             </div>
-            <form method="POST" action="">
+            <form method="POST" action="xulydangnhap.php">
                 <div class="mb-3">
                     <input type="text" class="form-control form-control-user" 
                            name="username" placeholder="Tên đăng nhập" required>

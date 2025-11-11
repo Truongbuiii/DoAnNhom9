@@ -1,17 +1,13 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) {
-    session_start(); // Khởi tạo session
+    session_start();
 }
 
-// ✅ Kiểm tra đăng nhập
-if (!isset($_SESSION['username'])) {
-    header("Location: pages/login.php");
-    exit;
-}
-
-// ✅ Lấy thông tin từ session
+// Lấy thông tin người dùng từ session
 $role = $_SESSION['PhanQuyen'] ?? '';
 $MaNV = $_SESSION['MaNV'] ?? 0;
+$HoTen = $_SESSION['HoTen'] ?? '';
+$username = $_SESSION['username'] ?? '';
 ?>
 
 <!-- Sidebar -->
@@ -23,11 +19,10 @@ $MaNV = $_SESSION['MaNV'] ?? 0;
             <i class="fas fa-laugh-wink"></i>
         </div>
         <div class="sidebar-brand-text mx-3">
-            <?php echo ($role == 'Admin') ? 'Tôi là Admin' : 'Tôi là Nhân viên'; ?>
+            <?= ($role === 'Admin') ? 'Tôi là Admin' : 'Tôi là Nhân viên'; ?>
         </div>
     </a>
 
-    <!-- Divider -->
     <hr class="sidebar-divider my-0">
 
     <!-- Nav Item - Bán hàng -->
@@ -38,8 +33,7 @@ $MaNV = $_SESSION['MaNV'] ?? 0;
         </a>
     </li>
 
-    <?php if ($role == 'Admin'): ?>
-        <!-- Divider -->
+    <?php if ($role === 'Admin'): ?>
         <hr class="sidebar-divider">
 
         <div class="sidebar-heading">Tùy chọn</div>
@@ -115,15 +109,14 @@ $MaNV = $_SESSION['MaNV'] ?? 0;
                 <li class="nav-item dropdown no-arrow">
                     <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <!-- ✅ Chỉ hiện phân quyền -->
                         <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                            <?php echo ($role == 'Admin') ? 'Admin' : 'Nhân viên'; ?>
+                            <?= ($role === 'Admin') ? 'Admin' : 'Nhân viên'; ?>
                         </span>
                         <img class="img-profile rounded-circle" src="../img/undraw_profile.svg">
                     </a>
                     <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                         aria-labelledby="userDropdown">
-                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                        <a class="dropdown-item" href="/pages/logout.php">
                             <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                             Đăng xuất
                         </a>

@@ -1,11 +1,39 @@
 <?php
 session_start();
-
 include 'db/connect.php';
 $conn->set_charset("utf8");
 
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['MaNV'])) {
+    header("Location: pages/login.php");
+    exit;
+}
+
+// Kiểm tra trạng thái tài khoản
+$MaNV = $_SESSION['MaNV'];
+$stmt = $conn->prepare("SELECT TinhTrang FROM nhanvien WHERE MaNV = ?");
+$stmt->bind_param("i", $MaNV);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+if (!$user || $user['TinhTrang'] != 1) { // Tài khoản bị khóa hoặc không tồn tại
+    session_destroy();
+    header("Location: pages/login.php?msg=locked");
+    exit;
+}
+$stmt->close();
+
+// Lưu lại thông tin người dùng từ session
+$MaNV = $_SESSION['MaNV'];
+$HoTen = $_SESSION['HoTen'];
+$PhanQuyen = $_SESSION['PhanQuyen'];
+
+
 include 'include/header.php';
 include 'include/sidebar.php';
+
+
 // ==========================
 // Bỏ chọn khách hàng
 // ==========================
