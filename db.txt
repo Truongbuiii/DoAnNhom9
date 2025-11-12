@@ -161,3 +161,17 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_TruSoLuongBanh_KhiBan
+AFTER INSERT ON ChiTietDonHang
+FOR EACH ROW
+BEGIN
+    -- Cập nhật bảng ThongTinBanh, trừ đi số lượng vừa được thêm vào ChiTietDonHang
+    UPDATE ThongTinBanh
+    SET SoLuong = SoLuong - NEW.SoLuong -- NEW.SoLuong là số lượng từ dòng vừa INSERT
+    WHERE MaBanh = NEW.MaBanh;         -- NEW.MaBanh là mã bánh từ dòng vừa INSERT
+END$$
+
+DELIMITER ;

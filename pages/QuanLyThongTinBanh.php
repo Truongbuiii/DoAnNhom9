@@ -1,4 +1,6 @@
 <?php
+// TÔI ĐÃ SỬA LẠI FILE NÀY
+include '../db/connect.php'; // <-- ĐÃ SỬA: Sửa 'include' thành 'db/connect.php' theo cấu trúc mới
 include '../include/header.php'; 
 include '../include/sidebar.php'; 
 
@@ -30,14 +32,31 @@ if (isset($_POST['them'])) {
     }
 }
 
-// ======== XỬ LÝ CẬP NHẬT ========
+// ======== XỬ LÝ CẬP NHẬT (ĐÃ SỬA LOGIC SỐ LƯỢNG) ========
 if (isset($_POST['luu_sua'])) {
     $ma = intval($_POST['sua_ma']);
     $ten = $conn->real_escape_string(trim($_POST['sua_ten']));
     $gia = floatval($_POST['sua_gia']);
-    $soluong = intval($_POST['sua_soluong']);
     $loai = intval($_POST['sua_loai']);
     $tinhtrang = intval($_POST['sua_tinhtrang']);
+    
+    // ======== LOGIC CẬP NHẬT KHO MỚI ========
+    $soluong_goc = intval($_POST['sua_soluong_goc']); // Lấy số lượng gốc
+    $nhap_hang = intval($_POST['nhap_hang']);       // Lấy số lượng nhập
+    $xuat_hang = intval($_POST['xuat_hang']);       // Lấy số lượng xuất
+
+    // Tính toán số lượng mới
+    $soluong_moi = $soluong_goc + $nhap_hang - $xuat_hang;
+
+    // Đảm bảo số lượng không bị âm
+    if ($soluong_moi < 0) {
+        $soluong_moi = 0;
+    }
+    
+    // Gán biến $soluong để câu SQL UPDATE sử dụng
+    $soluong = $soluong_moi;
+    // ======== KẾT THÚC LOGIC MỚI ========
+
     $anh_cu = $_POST['anh_cu'];
     $tenAnhMoi = $anh_cu;
 
@@ -50,6 +69,7 @@ if (isset($_POST['luu_sua'])) {
         }
     }
 
+    // Câu SQL này vẫn giữ nguyên, vì nó dùng biến $soluong đã được tính toán ở trên
     $sqlUpdate = "UPDATE ThongTinBanh 
                   SET TenBanh='$ten', Gia=$gia, SoLuong=$soluong, MaLoaiBanh=$loai, TinhTrang=$tinhtrang, HinhAnh='$tenAnhMoi'
                   WHERE MaBanh=$ma";
@@ -120,9 +140,7 @@ if (isset($_GET['khoa'])) {
 <div class="container mt-4">
     <h2 class="text-center mb-4 text-primary">QUẢN LÝ THÔNG TIN BÁNH</h2>
 
- <!-- THANH TÌM KIẾM (ngoài card, giãn cách thoáng) -->
-<form method="GET" class="d-flex flex-wrap align-items-end gap-4 mb-4">
-    <!-- Ô tìm kiếm -->
+ <form method="GET" class="d-flex flex-wrap align-items-end gap-4 mb-4">
     <div style="min-width:300px;">
         <label for="search" class="form-label mb-1 fw-semibold">Tìm kiếm bánh</label>
         <input type="text" id="search" name="search"
@@ -131,7 +149,6 @@ if (isset($_GET['khoa'])) {
                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
     </div>
 
-    <!-- Nhóm nút -->
     <div class="d-flex align-items-end gap-3">
         <button class="btn btn-primary px-4" type="submit"> <i class="fas fa-search"></i> Tìm</button>
 
@@ -154,7 +171,6 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
 
     <?php if (!empty($errMsg)) echo "<div class='alert alert-danger'>$errMsg</div>"; ?>
 
-    <!-- KHUNG DANH SÁCH BÁNH -->
     <div class="card shadow-sm p-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
             <h5 class="text-primary mb-2 mb-md-0">Danh sách bánh</h5>
@@ -203,7 +219,10 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                     $badge = $tinhtrang
                         ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
                         : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
-                    $hinhAnhPath = "../img/" . $hinhAnh;
+                    
+                    // Sửa đường dẫn ảnh
+                    $hinhAnhPath = $hinhAnh ? (BASE_APP_PATH . "/img/" . $hinhAnh) : '';
+
 
                     echo "
                     <tr>
@@ -213,7 +232,7 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                         <td>$gia</td>
                         <td>$soluong</td>
                         <td>";
-                    echo $hinhAnh
+                    echo $hinhAnhPath
                         ? "<img src='$hinhAnhPath' width='60' height='60' style='object-fit:cover;border-radius:8px;'>"
                         : "<span class='text-muted fst-italic'>Không có ảnh</span>";
                     echo "</td>
@@ -242,9 +261,8 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
     </div>
 </div>
 
-<!-- Modal Sửa Bánh -->
 <div class="modal fade" id="modalSuaBanh" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg"> 
     <div class="modal-content border-0 shadow-lg rounded-4">
       <div class="modal-header bg-warning text-white rounded-top-4">
         <h5 class="modal-title fw-semibold">Sửa thông tin bánh</h5>
@@ -255,44 +273,60 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
         <div class="modal-body p-4">
           <input type="hidden" id="sua_ma" name="sua_ma">
           <input type="hidden" id="anh_cu" name="anh_cu">
+          <input type="hidden" id="sua_soluong_goc" name="sua_soluong_goc">
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Tên bánh</label>
-            <input type="text" class="form-control" id="sua_ten" name="sua_ten" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Loại bánh</label>
-            <select id="sua_loai" name="sua_loai" class="form-select" required>
-              <?php
-              $resLoai = $conn->query("SELECT * FROM LoaiBanh");
-              while ($rowLoai = $resLoai->fetch_assoc()) {
-                  echo "<option value='{$rowLoai['MaLoaiBanh']}'>{$rowLoai['TenLoaiBanh']}</option>";
-              }
-              ?>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Giá (VNĐ)</label>
-            <input type="number" class="form-control" id="sua_gia" name="sua_gia" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Số lượng</label>
-            <input type="number" class="form-control" id="sua_soluong" name="sua_soluong" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Tình trạng</label>
-            <select id="sua_tinhtrang" name="sua_tinhtrang" class="form-select">
-              <option value="1">Mở</option>
-              <option value="0">Khóa</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Hình ảnh mới (nếu muốn thay)</label>
-            <input type="file" class="form-control" id="sua_hinhanh" name="sua_hinhanh" accept="image/*">
-          </div>
-        </div>
+          <div class="row">
+          
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Tên bánh</label>
+                <input type="text" class="form-control" id="sua_ten" name="sua_ten" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Loại bánh</label>
+                <select id="sua_loai" name="sua_loai" class="form-select" required>
+                  <?php
+                  // Chạy lại query để lấy danh sách loại bánh
+                  $resLoaiModal = $conn->query("SELECT * FROM LoaiBanh WHERE TinhTrang = 1");
+                  while ($rowLoai = $resLoaiModal->fetch_assoc()) {
+                      echo "<option value='{$rowLoai['MaLoaiBanh']}'>{$rowLoai['TenLoaiBanh']}</option>";
+                  }
+                  ?>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Giá (VNĐ)</label>
+                <input type="number" class="form-control" id="sua_gia" name="sua_gia" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Tình trạng</label>
+                <select id="sua_tinhtrang" name="sua_tinhtrang" class="form-select">
+                  <option value="1">Mở</option>
+                  <option value="0">Khóa</option>
+                </select>
+              </div>
+            </div> <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Số lượng tồn kho hiện tại</label>
+                <input type="number" class="form-control" id="so_luong_hien_tai" readonly style="background-color: #e9ecef;">
+              </div>
 
-        <div class="modal-footer border-0 pt-0 pb-4 px-4">
+              <div class="row">
+                <div class="col-6 mb-3">
+                    <label for="nhap_hang" class="form-label fw-semibold text-success">Nhập thêm</label>
+                    <input type="number" class="form-control" id="nhap_hang" name="nhap_hang" placeholder="0" min="0" value="0">
+                </div>
+                <div class="col-6 mb-3">
+                    <label for="xuat_hang" class="form-label fw-semibold text-danger">Xuất bớt</label>
+                    <input type="number" class="form-control" id="xuat_hang" name="xuat_hang" placeholder="0" min="0" value="0">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Hình ảnh mới (nếu muốn thay)</label>
+                <input type="file" class="form-control" id="sua_hinhanh" name="sua_hinhanh" accept="image/*">
+              </div>
+            </div> </div> </div> <div class="modal-footer border-0 pt-0 pb-4 px-4">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
           <button type="submit" name="luu_sua" class="btn btn-success">Lưu thay đổi</button>
         </div>
@@ -309,10 +343,21 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('sua_ma').value = btn.dataset.id;
             document.getElementById('sua_ten').value = btn.dataset.ten;
             document.getElementById('sua_gia').value = btn.dataset.gia;
-            document.getElementById('sua_soluong').value = btn.dataset.soluong;
             document.getElementById('sua_tinhtrang').value = btn.dataset.tinhtrang;
             document.getElementById('sua_loai').value = btn.dataset.loai;
             document.getElementById('anh_cu').value = btn.dataset.anh;
+            
+            // ========== SỬA LOGIC SỐ LƯỢNG MỚI ==========
+            // Gán giá trị cho ô 'số lượng hiện tại' (để xem)
+            document.getElementById('so_luong_hien_tai').value = btn.dataset.soluong; 
+            // Gán giá trị cho ô 'số lượng gốc' (để gửi đi)
+            document.getElementById('sua_soluong_goc').value = btn.dataset.soluong; 
+            
+            // Reset 2 ô nhập/xuất về 0 mỗi khi mở modal
+            document.getElementById('nhap_hang').value = 0;
+            document.getElementById('xuat_hang').value = 0;
+            // ========== HẾT SỬA LOGIC ==========
+
             modal.show();
         });
     });
