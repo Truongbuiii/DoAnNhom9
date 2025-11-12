@@ -2,7 +2,58 @@
 session_start();
 include 'db/connect.php';
 $conn->set_charset("utf8");
+if(isset($_POST['ajax_action'])) {
+    $action = $_POST['ajax_action'];
 
+    switch($action){
+        case 'add_product':
+            $maBanh = intval($_POST['MaBanh']);
+            $row = mysqli_fetch_assoc(mysqli_query($conn,"SELECT TenBanh, Gia FROM ThongTinBanh WHERE MaBanh=$maBanh"));
+            if(!$row) exit(json_encode(['status'=>'error']));
+
+            if(isset($_SESSION['cart'][$maBanh])){
+                $_SESSION['cart'][$maBanh]['SoLuong']++;
+                $_SESSION['cart'][$maBanh]['ThanhTien'] += $row['Gia'];
+            } else {
+                $_SESSION['cart'][$maBanh] = [
+                    'TenBanh'=>$row['TenBanh'],
+                    'DonGia'=>$row['Gia'],
+                    'SoLuong'=>1,
+                    'ThanhTien'=>$row['Gia']
+                ];
+            }
+            echo json_encode(['status'=>'success']);
+            exit;
+
+        case 'remove_product':
+            $maBanh = intval($_POST['MaBanh']);
+            unset($_SESSION['cart'][$maBanh]);
+            echo json_encode(['status'=>'success']);
+            exit;
+
+        case 'change_qty':
+            $maBanh = intval($_POST['MaBanh']);
+            $type = $_POST['type'];
+            if(isset($_SESSION['cart'][$maBanh])){
+                if($type==='increase') $_SESSION['cart'][$maBanh]['SoLuong']++;
+                if($type==='decrease') $_SESSION['cart'][$maBanh]['SoLuong']--;
+                if($_SESSION['cart'][$maBanh]['SoLuong']<=0){
+                    unset($_SESSION['cart'][$maBanh]);
+                } else {
+                    $_SESSION['cart'][$maBanh]['ThanhTien']=$_SESSION['cart'][$maBanh]['DonGia']*$_SESSION['cart'][$maBanh]['SoLuong'];
+                }
+            }
+            echo json_encode(['status'=>'success']);
+            exit;
+
+        case 'get_cart':
+            $cart = $_SESSION['cart'] ?? [];
+            $tong = 0;
+            foreach($cart as $item) $tong += $item['ThanhTien'];
+            echo json_encode(['cart'=>$cart,'tong'=>$tong]);
+            exit;
+    }
+}
 // ==========================
 // Kiểm tra đăng nhập
 // ==========================
@@ -34,6 +85,19 @@ if (!$user || $user['TinhTrang'] != 1) {
 $HoTen = $user['HoTen'];
 $PhanQuyen = $user['PhanQuyen'];
 $username = $user['TenDangNhap'];
+
+
+// ==========================
+// Xóa sản phẩm
+// ==========================
+if(isset($_GET['remove'])){
+    $maBanh = intval($_GET['remove']);
+    unset($_SESSION['cart'][$maBanh]);
+
+    // Sau khi xóa xong, làm sạch URL (xóa ?remove=...) và reload lại trang
+    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?'));
+    exit;
+}
 
 include 'include/header.php';
 include 'include/sidebar.php';
@@ -68,11 +132,18 @@ if(isset($_POST['add_product'])){
 }
 
 // ==========================
-// Xóa sản phẩm
+// Cập nhật số lượng sản phẩm
 // ==========================
-if(isset($_GET['remove'])){
-    $maBanh = intval($_GET['remove']);
-    unset($_SESSION['cart'][$maBanh]);
+if(isset($_POST['update_quantity'])){
+    $maBanh = intval($_POST['MaBanh']);
+    $newQty = intval($_POST['SoLuong']);
+
+    if($newQty > 0 && isset($_SESSION['cart'][$maBanh])){
+        $_SESSION['cart'][$maBanh]['SoLuong'] = $newQty;
+        $_SESSION['cart'][$maBanh]['ThanhTien'] = $_SESSION['cart'][$maBanh]['DonGia'] * $newQty;
+    } elseif($newQty == 0){
+        unset($_SESSION['cart'][$maBanh]); // nếu nhập 0 thì coi như xóa
+    }
 }
 
 // ==========================
@@ -86,8 +157,7 @@ if(isset($_POST['select_customer'])){
 // ==========================
 // Thêm khách hàng mới
 // ==========================
-// Chọn khách hàng mới vừa nhập
-// Chọn khách hàng mới vừa nhập (lưu tạm session, chưa lưu DB)
+// Chọn khách hàng mới vừa nhập(lưu tạm session, chưa lưu DB)s
 if(isset($_POST['select_new_customer'])){
     $tenKH = trim($_POST['TenKH'] ?? '');
     $sdt   = trim($_POST['SDT'] ?? '');
@@ -101,6 +171,29 @@ if(isset($_POST['select_new_customer'])){
     }
 }
 
+// ==========================
+// Tăng/Giảm số lượng sản phẩm
+// ==========================
+if(isset($_POST['change_qty'])){
+    $maBanh = intval($_POST['MaBanh']);
+    $action = $_POST['change_qty']; // 'increase' hoặc 'decrease'
+
+    if(isset($_SESSION['cart'][$maBanh])){
+        if($action === 'increase'){
+            $_SESSION['cart'][$maBanh]['SoLuong'] += 1;
+        } elseif($action === 'decrease'){
+            $_SESSION['cart'][$maBanh]['SoLuong'] -= 1;
+            if($_SESSION['cart'][$maBanh]['SoLuong'] <= 0){
+                unset($_SESSION['cart'][$maBanh]); // nếu số lượng = 0 thì xóa luôn
+            }
+        }
+        // Cập nhật lại thành tiền
+        if(isset($_SESSION['cart'][$maBanh])){
+            $_SESSION['cart'][$maBanh]['ThanhTien'] =
+                $_SESSION['cart'][$maBanh]['SoLuong'] * $_SESSION['cart'][$maBanh]['DonGia'];
+        }
+    }
+}
 
 // ==========================
 // Thanh toán
@@ -192,6 +285,44 @@ if(isset($_SESSION['selected_customer'])){
 #new_customer_form button,
 #existing_customer_form button {
     height: 38px; /* đồng bộ với input */
+}
+.btn.btn-sm.btn-secondary {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 1;
+    font-weight: bold;
+}
+.product-btn {
+    width: 100%;
+    height: 180px; /* tăng chiều cao để vừa chữ dài và số lượng */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* đều khoảng cách trên-dưới */
+    align-items: center;
+    background: #fff;
+    padding: 10px;
+    text-align: center;
+    transition: .3s;
+}
+
+.product-btn:hover {
+    background: #f5f5f5;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+/* Nếu hết hàng */
+.product-btn.out-of-stock {
+    background: #eee;
+    color: #999;
+    cursor: not-allowed;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 180px; /* giống nhau */
 }
 
 </style>
@@ -287,21 +418,33 @@ document.addEventListener('DOMContentLoaded', function(){
                         <?php foreach($loaiBanhArr as $index=>$loai): ?>
                         <div class="tab-pane fade <?= $index==0?'show active':'' ?>" id="tab-<?= $loai['MaLoaiBanh'] ?>">
                             <div class="row">
-                                <?php
-                                $banhRes = mysqli_query($conn,"SELECT * FROM ThongTinBanh WHERE MaLoaiBanh={$loai['MaLoaiBanh']}");
-                                while($b = mysqli_fetch_assoc($banhRes)):
-                                ?>
-                                <div class="col-md-3 mb-3">
+                            <?php
+                            $banhRes = mysqli_query($conn,"SELECT * FROM ThongTinBanh WHERE MaLoaiBanh={$loai['MaLoaiBanh']}");
+                            while($b = mysqli_fetch_assoc($banhRes)):
+                                // Số lượng còn lại = tồn kho - số lượng đã thêm vào giỏ
+                                $soLuongConLai = $b['SoLuong'] - ($_SESSION['cart'][$b['MaBanh']]['SoLuong'] ?? 0);
+                            ?>
+                            <div class="col-md-3 mb-3">
+                                <?php if($soLuongConLai > 0): ?>
                                     <form method="post">
                                         <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
                                         <button type="submit" name="add_product" class="product-btn">
-                                            <strong><?= htmlspecialchars($b['TenBanh']) ?></strong>
-                                            <small><?= number_format($b['Gia'],0,',','.') ?> đ</small>
+                                            <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
+                                            <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
+                                            <small>Số lượng còn: <?= $soLuongConLai ?></small>
                                         </button>
                                     </form>
-                                </div>
-                                <?php endwhile; ?>
+                                <?php else: ?>
+                                    <div class="product-btn" style="background:#eee;color:#999;cursor:not-allowed;">
+                                        <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
+                                        <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
+                                        <small><strong>Hết hàng</strong></small>
+                                    </div>
+                                <?php endif; ?>
                             </div>
+                            <?php endwhile; ?>
+                            </div>
+
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -359,7 +502,15 @@ document.addEventListener('DOMContentLoaded', function(){
                         ?>
                         <tr>
                             <td><?= htmlspecialchars($item['TenBanh']) ?></td>
-                            <td><?= $item['SoLuong'] ?></td>
+          <td style="text-align:center;">
+    <form method="post" style="display:flex; justify-content:center; align-items:center; gap:5px;">
+        <input type="hidden" name="MaBanh" value="<?= $maBanh ?>">
+        <button type="submit" name="change_qty" value="decrease" class="btn btn-sm btn-secondary">–</button>
+        <span style="width:30px; text-align:center;"><?= $item['SoLuong'] ?></span>
+        <button type="submit" name="change_qty" value="increase" class="btn btn-sm btn-secondary">+</button>
+    </form>
+</td>
+
                             <td><?= number_format($item['ThanhTien'],0,',','.') ?> đ</td>
                             <td>
                                 <a href='?remove=<?= $maBanh ?>' class='btn btn-sm btn-danger'>X</a>
@@ -394,5 +545,29 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
 </div>
 
+<script>
+// ==========================
+// Ghi nhớ tab đang mở bằng Local Storage
+// ==========================
+document.addEventListener('DOMContentLoaded', function() {
+    const activeTabId = localStorage.getItem('activeTabId');
+    if (activeTabId) {
+        const tabButton = document.querySelector(`[data-bs-target="${activeTabId}"]`);
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+        }
+    }
+
+    // Khi người dùng bấm đổi tab thì lưu lại
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('shown.bs.tab', function(e) {
+            const target = e.target.getAttribute('data-bs-target');
+            localStorage.setItem('activeTabId', target);
+        });
+    });
+});
+</script>
 
 <?php include 'include/footer.php'; ?>  
