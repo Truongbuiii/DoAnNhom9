@@ -198,48 +198,70 @@ if(isset($_POST['change_qty'])){
 // ==========================
 // Thanh toán
 // ==========================
-if(isset($_POST['checkout'])){
+if (isset($_POST['checkout'])) {
     $maKH = null;
 
-    if(isset($_SESSION['new_customer'])){
+    // --- Xác định khách hàng ---
+    if (isset($_SESSION['new_customer'])) {
         $tenKH = mysqli_real_escape_string($conn, $_SESSION['new_customer']['HoTen']);
         $sdt   = mysqli_real_escape_string($conn, $_SESSION['new_customer']['SDT']);
         mysqli_query($conn, "INSERT INTO KhachHang(HoTen, SDT) VALUES('$tenKH', '$sdt')");
         $maKH = mysqli_insert_id($conn);
-    }
-    elseif(isset($_SESSION['selected_customer'])){
+    } elseif (isset($_SESSION['selected_customer'])) {
         $maKH = intval($_SESSION['selected_customer']);
     }
 
-    if(!$maKH){
-        echo "<script>alert('Vui lòng chọn hoặc nhập khách hàng!');</script>";
-        exit;
+    // --- Nếu chưa có khách hàng ---
+    if (!$maKH) {
+        echo "<script>
+            alert('Vui lòng chọn hoặc nhập khách hàng!');
+            window.location = 'index.php';
+        </script>";
+        return;
     }
 
-    // Lưu đơn hàng
+    // --- Kiểm tra số lượng tồn trước khi tạo đơn ---
+    foreach ($_SESSION['cart'] as $maBanh => $item) {
+        $check = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SoLuong, TenBanh FROM ThongTinBanh WHERE MaBanh = $maBanh"));
+        if ($check && $check['SoLuong'] < $item['SoLuong']) {
+            echo "<script>
+                alert('Sản phẩm {$check['TenBanh']} chỉ còn {$check['SoLuong']} chiếc, không đủ để thanh toán!');
+                window.location = 'index.php';
+            </script>";
+            return;
+        }
+    }
+
+    // --- Tạo đơn hàng ---
     $tongTien = 0;
-    foreach($_SESSION['cart'] as $item){
+    foreach ($_SESSION['cart'] as $item) {
         $tongTien += $item['ThanhTien'];
     }
 
     $maNV = $_SESSION['MaNV'];
-    mysqli_query($conn,"INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) 
-                        VALUES(NOW(), $tongTien, $maKH, $maNV)");
+    mysqli_query($conn, "INSERT INTO DonHang(NgayLap, TongTien, MaKH, MaNV) 
+                         VALUES(NOW(), $tongTien, $maKH, $maNV)");
     $maDon = mysqli_insert_id($conn);
 
-    foreach($_SESSION['cart'] as $maBanh => $item){
-        mysqli_query($conn,"INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
-                            VALUES($maDon, $maBanh, {$item['SoLuong']}, {$item['DonGia']}, {$item['ThanhTien']})");
+    // --- Lưu chi tiết và trừ tồn kho ---
+    foreach ($_SESSION['cart'] as $maBanh => $item) {
+        // Lưu chi tiết đơn hàng
+        mysqli_query($conn, "INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
+                             VALUES($maDon, $maBanh, {$item['SoLuong']}, {$item['DonGia']}, {$item['ThanhTien']})");
+
+        // Cập nhật tồn kho thực tế
+        mysqli_query($conn, "UPDATE ThongTinBanh 
+                             SET SoLuong = SoLuong - {$item['SoLuong']}
+                             WHERE MaBanh = $maBanh");
     }
 
-    // Xóa session tạm
+    // --- Xóa session tạm ---
     unset($_SESSION['cart']);
     unset($_SESSION['selected_customer']);
     unset($_SESSION['new_customer']);
 
     echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
 }
-
 
 // ==========================
 // Dữ liệu hiển thị
@@ -295,7 +317,7 @@ if(isset($_SESSION['selected_customer'])){
 }
 .product-btn {
     width: 100%;
-    height: 180px; /* tăng chiều cao để vừa chữ dài và số lượng */
+    height: 150px; /* tăng chiều cao để vừa chữ dài và số lượng */
     border: 1px solid #ccc;
     border-radius: 8px;
     display: flex;
@@ -426,24 +448,25 @@ document.addEventListener('DOMContentLoaded', function(){
                             ?>
                             <div class="col-md-3 mb-3">
                                 <?php if($soLuongConLai > 0): ?>
-                                    <form method="post">
-                                        <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
-                                        <button type="submit" name="add_product" class="product-btn">
-                                            <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
-                                            <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
-                                            <small>Số lượng còn: <?= $soLuongConLai ?></small>
-                                        </button>
-                                    </form>
-                                <?php else: ?>
-                                    <div class="product-btn" style="background:#eee;color:#999;cursor:not-allowed;">
-                                        <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
-                                        <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
-                                        <small><strong>Hết hàng</strong></small>
-                                    </div>
-                                <?php endif; ?>
+                            <form method="post">
+                                <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
+                                <button type="submit" name="add_product" class="product-btn">
+                                    <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
+                                    <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
+                                    <small>Số lượng còn: <?= $soLuongConLai ?></small>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <div class="product-btn out-of-stock">
+                                <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
+                                <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
+                                <small><strong>Hết hàng</strong></small>
+                            </div>
+                        <?php endif; ?>
+
                             </div>
                             <?php endwhile; ?>
-                            </div>
+                        </div>
 
                         </div>
                         <?php endforeach; ?>
