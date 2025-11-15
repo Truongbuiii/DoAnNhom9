@@ -35,14 +35,14 @@ if (isset($_POST['MaNV'])) {
 
     if ($stmt->execute()) {
         if ($TinhTrang == 1) {
-            echo "<script>alert('✅ Đã mở khóa và cập nhật thông tin nhân viên thành công!'); 
+            echo "<script>alert('Cập nhật thông tin nhân viên thành công!'); 
                   window.location.href='QuanLyNhanVien.php';</script>";
         } else {
-            echo "<script>alert('💾 Cập nhật thông tin nhân viên thành công!'); 
+            echo "<script>alert('Cập nhật thông tin nhân viên thành công!'); 
                   window.location.href='QuanLyNhanVien.php';</script>";
         }
     } else {
-        echo "<script>alert('❌ Lỗi khi cập nhật!'); window.history.back();</script>";
+        echo "<script>alert('Lỗi khi cập nhật!'); window.history.back();</script>";
     }
 }
 ?>

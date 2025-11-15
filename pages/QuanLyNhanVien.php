@@ -1,8 +1,43 @@
-
 <?php
-
 include '../include/header.php'; 
 include '../include/sidebar.php'; 
+
+// ===============================================
+// ✅ KHỐI CSS TẬP TRUNG CHO TOÀN TRANG
+// ===============================================
+?>
+<style>
+    /* 1. Hiệu ứng "shadow rise" cho nút */
+    .shadow-rise-btn {
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .shadow-rise-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* 2. Giãn cách icon & text */
+    .btn .fas {
+        margin-right: 5px;
+    }
+
+   /* 3. Sửa nút "X" trong modal (Quan trọng) */
+.modal-header .close {
+    background: none !important;
+    border: none !important;
+    opacity: 0.7;
+    color: #fff !important; /* Chữ X màu trắng */
+    font-size: 1.5rem;
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+.modal-header .close:hover {
+    opacity: 1;
+}
+</style>
+
+<?php
 // ✅ Lấy giá trị tìm kiếm nếu có
 $search = isset($_GET['search']) ? trim($_GET['search']) : "";
 
@@ -24,7 +59,6 @@ if ($search !== "") {
 ?>
 
 
-<!-- Nội dung chính -->
 <div class="container-fluid">
   <h1 class="h3 mb-2 text-gray-800">Quản lý nhân viên</h1>
               <form method="GET" class="mb-3 d-flex align-items-center">
@@ -33,11 +67,11 @@ if ($search !== "") {
                 placeholder="Tìm theo tên đăng nhập, họ tên hoặc phân quyền..."
                 value="<?php echo htmlspecialchars($search); ?>">
 
-          <button class="btn btn-primary mr-2" type="submit">
+          <button class="btn btn-primary mr-2 shadow-rise-btn" type="submit">
             <i class="fas fa-search"></i> Tìm
           </button>
 
-          <a href="QuanLyNhanVien.php" class="btn btn-secondary">
+          <a href="QuanLyNhanVien.php" class="btn btn-secondary shadow-rise-btn">
             <i class="fas fa-undo"></i> Làm mới
           </a>
         </form>
@@ -45,7 +79,10 @@ if ($search !== "") {
   <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
-      <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#addModal">Thêm nhân viên</button>
+      
+      <button class="btn btn-success shadow-rise-btn" data-toggle="modal" data-target="#addModal" role="button">
+        <i class="fas fa-plus"></i> Thêm nhân viên
+      </button>
     </div>
 
     <div class="card-body">
@@ -84,7 +121,7 @@ if ($search !== "") {
 
                 // Nút hành động
                 echo "<td>
-                        <button class='btn btn-warning btn-sm btn-edit'
+                        <button class='btn btn-warning btn-sm btn-edit shadow-rise-btn'
                             data-id='{$row['MaNV']}'
                             data-tendangnhap='{$row['TenDangNhap']}'
                             data-hoten='{$row['HoTen']}'
@@ -94,7 +131,7 @@ if ($search !== "") {
                             <i class='fas fa-edit'></i> Sửa
                         </button>
                         <a href='nhanvien_delete.php?MaNV={$row['MaNV']}'
-                           class='btn btn-danger btn-sm'
+                           class='btn btn-danger btn-sm shadow-rise-btn'
                            onclick='return confirm(\"Bạn có chắc muốn xóa nhân viên này không?\")'>
                            <i class='fas fa-trash'></i> Xóa
                         </a>
@@ -112,14 +149,12 @@ if ($search !== "") {
   </div>
 </div>
 
-<!-- ✅ Modal thêm nhân viên -->
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="nhanvien_add_action.php" class="modal-content">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">Thêm nhân viên</h5>
-        <button type="button" class="btn-close btn btn-light border border-danger text-danger" data-dismiss="modal">×</button>
-      </div>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>      </div>
 
       <div class="modal-body">
         <div class="mb-3">
@@ -140,7 +175,7 @@ if ($search !== "") {
 
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
-          <select name="PhanQuyen" class="form-select">
+          <select name="PhanQuyen" class="form-control">
             <option value="NhanVien">Nhân viên</option>
             <option value="Admin">Admin</option>
           </select>
@@ -149,21 +184,18 @@ if ($search !== "") {
 
       
       <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Lưu</button>
+        <button type="submit" class="btn btn-success shadow-rise-btn">Lưu</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ✅ Modal sửa nhân viên -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="nhanvien_update.php" class="modal-content">
       <div class="modal-header bg-primary text-white">
        <h5 class="modal-title">Sửa thông tin nhân viên</h5>
-<a href="quanlynhanvien.php" class="btn btn-light border border-danger text-danger" aria-label="Close">×</a>
-
-      </div>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>      </div>
 
       <div class="modal-body">
         <input type="hidden" name="MaNV" id="edit-id">
@@ -185,7 +217,7 @@ if ($search !== "") {
 
         <div class="mb-3">
           <label class="form-label">Tình trạng</label>
-          <select name="tinhtrang" id="edit-tinhtrang" class="form-select">
+          <select name="tinhtrang" id="edit-tinhtrang" class="form-control">
             <option value="1">Mở</option>
             <option value="0">Khóa</option>
           </select>
@@ -193,7 +225,7 @@ if ($search !== "") {
 
         <div class="mb-3">
           <label class="form-label">Phân quyền</label>
-          <select name="PhanQuyen" id="edit-phanquyen" class="form-select">
+          <select name="PhanQuyen" id="edit-phanquyen" class="form-control">
             <option value="Admin">Admin</option>
             <option value="NhanVien">Nhân viên</option>
           </select>
@@ -201,14 +233,14 @@ if ($search !== "") {
       </div>
 
       <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Lưu </button>
+        <button type="submit" class="btn btn-success shadow-rise-btn">Lưu </button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-  // Gán dữ liệu khi nhấn nút "Sửa"
+  // Gán dữ liệu khi nhấn nút "Sửa" (Không thay đổi logic)
   document.querySelectorAll('.btn-edit').forEach(button => {
     button.addEventListener('click', () => {
       document.getElementById('edit-id').value = button.dataset.id;
