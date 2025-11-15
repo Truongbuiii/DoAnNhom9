@@ -2,6 +2,11 @@
 session_start();
 include 'db/connect.php';
 $conn->set_charset("utf8");
+
+// =================================
+// 1. BỘ ĐIỀU KHIỂN AJAX (API)
+// Xử lý các yêu cầu ngầm và thoát ngay
+// =================================
 if(isset($_POST['ajax_action'])) {
     $action = $_POST['ajax_action'];
 
@@ -54,17 +59,19 @@ if(isset($_POST['ajax_action'])) {
             exit;
     }
 }
-// ==========================
+
+// =================================
+// 2. BẢO MẬT & PHIÊN
+// Kiểm tra đăng nhập và trạng thái tài khoản
+// =================================
+
 // Kiểm tra đăng nhập
-// ==========================
 if (!isset($_SESSION['MaNV'])) {
     header("Location: pages/login.php");
     exit;
 }
 
-// ==========================
 // Kiểm tra trạng thái tài khoản
-// ==========================
 $MaNV = $_SESSION['MaNV'];
 $stmt = $conn->prepare("SELECT TinhTrang, HoTen, PhanQuyen, TenDangNhap FROM nhanvien WHERE MaNV=?");
 $stmt->bind_param("i", $MaNV);
@@ -79,131 +86,18 @@ if (!$user || $user['TinhTrang'] != 1) {
     exit;
 }
 
-// ==========================
 // Lưu thông tin người dùng
-// ==========================
 $HoTen = $user['HoTen'];
 $PhanQuyen = $user['PhanQuyen'];
 $username = $user['TenDangNhap'];
 
 
-// ==========================
-// Xóa sản phẩm
-// ==========================
-if(isset($_GET['remove'])){
-    $maBanh = intval($_GET['remove']);
-    unset($_SESSION['cart'][$maBanh]);
+// =================================
+// 3. BỘ ĐIỀU KHIỂN TRANG (POST/GET)
+// Xử lý tất cả các hành động submit form (không phải AJAX)
+// =================================
 
-    // Sau khi xóa xong, làm sạch URL (xóa ?remove=...) và reload lại trang
-    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?'));
-    exit;
-}
-
-include 'include/header.php';
-include 'include/sidebar.php';
-// ==========================
-// Bỏ chọn khách hàng
-// ==========================
-if(isset($_POST['clear_customer'])){
-    unset($_SESSION['selected_customer']);
-    unset($_SESSION['new_customer']);
-}
-
-
-// ==========================
-// Xử lý thêm sản phẩm
-// ==========================
-if(isset($_POST['add_product'])){
-    $maBanh = intval($_POST['MaBanh']);
-    $soLuong = 1;
-    $row = mysqli_fetch_assoc(mysqli_query($conn,"SELECT TenBanh, Gia, MaLoaiBanh FROM ThongTinBanh WHERE MaBanh=$maBanh"));
-    if(isset($_SESSION['cart'][$maBanh])){
-        $_SESSION['cart'][$maBanh]['SoLuong'] += $soLuong;
-        $_SESSION['cart'][$maBanh]['ThanhTien'] += $row['Gia'] * $soLuong;
-    } else {
-        $_SESSION['cart'][$maBanh] = [
-            'TenBanh' => $row['TenBanh'],
-            'DonGia' => $row['Gia'],
-            'SoLuong' => $soLuong,
-            'ThanhTien' => $row['Gia'] * $soLuong,
-            'MaLoaiBanh' => $row['MaLoaiBanh']
-        ];
-    }
-}
-
-// ==========================
-// Cập nhật số lượng sản phẩm
-// ==========================
-if(isset($_POST['update_quantity'])){
-    $maBanh = intval($_POST['MaBanh']);
-    $newQty = intval($_POST['SoLuong']);
-
-    if($newQty > 0 && isset($_SESSION['cart'][$maBanh])){
-        $_SESSION['cart'][$maBanh]['SoLuong'] = $newQty;
-        $_SESSION['cart'][$maBanh]['ThanhTien'] = $_SESSION['cart'][$maBanh]['DonGia'] * $newQty;
-    } elseif($newQty == 0){
-        unset($_SESSION['cart'][$maBanh]); // nếu nhập 0 thì coi như xóa
-    }
-}
-
-// ==========================
-// Chọn khách hàng
-// ==========================
-if(isset($_POST['select_customer'])){
-    $maKH = intval($_POST['MaKH']);
-    
-    // Chỉ lưu nếu MaKH là một ID hợp lệ (lớn hơn 0)
-    if ($maKH > 0) {
-        $_SESSION['selected_customer'] = $maKH;
-        // Xóa session khách hàng mới (nếu có) để tránh xung đột
-        unset($_SESSION['new_customer']);
-    }
-}
-// ==========================
-// ==========================
-// Thêm khách hàng mới
-// ==========================
-// Chọn khách hàng mới vừa nhập(lưu tạm session, chưa lưu DB)s
-if(isset($_POST['select_new_customer'])){
-    $tenKH = trim($_POST['TenKH'] ?? '');
-    $sdt   = trim($_POST['SDT'] ?? '');
-
-    if($tenKH != ''){
-        $_SESSION['new_customer'] = [
-            'HoTen' => $tenKH,
-            'SDT' => $sdt
-        ];
-        unset($_SESSION['selected_customer']); // nếu trước đó chọn khách cũ
-    }
-}
-
-// ==========================
-// Tăng/Giảm số lượng sản phẩm
-// ==========================
-if(isset($_POST['change_qty'])){
-    $maBanh = intval($_POST['MaBanh']);
-    $action = $_POST['change_qty']; // 'increase' hoặc 'decrease'
-
-    if(isset($_SESSION['cart'][$maBanh])){
-        if($action === 'increase'){
-            $_SESSION['cart'][$maBanh]['SoLuong'] += 1;
-        } elseif($action === 'decrease'){
-            $_SESSION['cart'][$maBanh]['SoLuong'] -= 1;
-            if($_SESSION['cart'][$maBanh]['SoLuong'] <= 0){
-                unset($_SESSION['cart'][$maBanh]); // nếu số lượng = 0 thì xóa luôn
-            }
-        }
-        // Cập nhật lại thành tiền
-        if(isset($_SESSION['cart'][$maBanh])){
-            $_SESSION['cart'][$maBanh]['ThanhTien'] =
-                $_SESSION['cart'][$maBanh]['SoLuong'] * $_SESSION['cart'][$maBanh]['DonGia'];
-        }
-    }
-}
-
-// ==========================
-// Thanh toán
-// ==========================
+// --- Thanh toán (Hành động quan trọng nhất) ---
 if (isset($_POST['checkout'])) {
     $maKH = null;
 
@@ -223,7 +117,7 @@ if (isset($_POST['checkout'])) {
             alert('Vui lòng chọn hoặc nhập khách hàng!');
             window.location = 'index.php';
         </script>";
-        return;
+        return; // Dùng return (hoặc exit) để dừng xử lý
     }
 
     // --- Kiểm tra số lượng tồn trước khi tạo đơn ---
@@ -234,7 +128,7 @@ if (isset($_POST['checkout'])) {
                 alert('Sản phẩm {$check['TenBanh']} chỉ còn {$check['SoLuong']} chiếc, không đủ để thanh toán!');
                 window.location = 'index.php';
             </script>";
-            return;
+            return; // Dùng return (hoặc exit) để dừng xử lý
         }
     }
 
@@ -251,11 +145,8 @@ if (isset($_POST['checkout'])) {
 
     // --- Lưu chi tiết và trừ tồn kho ---
     foreach ($_SESSION['cart'] as $maBanh => $item) {
-        // Lưu chi tiết đơn hàng
         mysqli_query($conn, "INSERT INTO ChiTietDonHang(MaDon, MaBanh, SoLuong, DonGia, ThanhTien)
                              VALUES($maDon, $maBanh, {$item['SoLuong']}, {$item['DonGia']}, {$item['ThanhTien']})");
-
-        // Cập nhật tồn kho thực tế
         mysqli_query($conn, "UPDATE ThongTinBanh 
                              SET SoLuong = SoLuong - {$item['SoLuong']}
                              WHERE MaBanh = $maBanh");
@@ -267,11 +158,100 @@ if (isset($_POST['checkout'])) {
     unset($_SESSION['new_customer']);
 
     echo "<script>alert('Thanh toán thành công!'); window.location='index.php';</script>";
+    exit; // QUAN TRỌNG: Dừng lại ở đây sau khi thanh toán, không render HTML bên dưới
 }
 
-// ==========================
-// Dữ liệu hiển thị
-// ==========================
+// --- Xóa sản phẩm (qua GET) ---
+if(isset($_GET['remove'])){
+    $maBanh = intval($_GET['remove']);
+    unset($_SESSION['cart'][$maBanh]);
+    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?')); // Làm sạch URL
+    exit;
+}
+
+// --- Bỏ chọn khách hàng ---
+if(isset($_POST['clear_customer'])){
+    unset($_SESSION['selected_customer']);
+    unset($_SESSION['new_customer']);
+}
+
+// --- Thêm sản phẩm (qua POST) ---
+if(isset($_POST['add_product'])){
+    $maBanh = intval($_POST['MaBanh']);
+    $soLuong = 1;
+    $row = mysqli_fetch_assoc(mysqli_query($conn,"SELECT TenBanh, Gia, MaLoaiBanh FROM ThongTinBanh WHERE MaBanh=$maBanh"));
+    if(isset($_SESSION['cart'][$maBanh])){
+        $_SESSION['cart'][$maBanh]['SoLuong'] += $soLuong;
+        $_SESSION['cart'][$maBanh]['ThanhTien'] += $row['Gia'] * $soLuong;
+    } else {
+        $_SESSION['cart'][$maBanh] = [
+            'TenBanh' => $row['TenBanh'],
+            'DonGia' => $row['Gia'],
+            'SoLuong' => $soLuong,
+            'ThanhTien' => $row['Gia'] * $soLuong,
+            'MaLoaiBanh' => $row['MaLoaiBanh']
+        ];
+    }
+}
+
+// --- Cập nhật số lượng (qua POST) ---
+if(isset($_POST['update_quantity'])){
+    $maBanh = intval($_POST['MaBanh']);
+    $newQty = intval($_POST['SoLuong']);
+    if($newQty > 0 && isset($_SESSION['cart'][$maBanh])){
+        $_SESSION['cart'][$maBanh]['SoLuong'] = $newQty;
+        $_SESSION['cart'][$maBanh]['ThanhTien'] = $_SESSION['cart'][$maBanh]['DonGia'] * $newQty;
+    } elseif($newQty == 0){
+        unset($_SESSION['cart'][$maBanh]);
+    }
+}
+
+// --- Chọn khách hàng cũ ---
+if(isset($_POST['select_customer'])){
+    $maKH = intval($_POST['MaKH']);
+    if ($maKH > 0) {
+        $_SESSION['selected_customer'] = $maKH;
+        unset($_SESSION['new_customer']);
+    }
+}
+
+// --- Chọn khách hàng mới ---
+if(isset($_POST['select_new_customer'])){
+    $tenKH = trim($_POST['TenKH'] ?? '');
+    $sdt   = trim($_POST['SDT'] ?? '');
+    if($tenKH != ''){
+        $_SESSION['new_customer'] = [
+            'HoTen' => $tenKH,
+            'SDT' => $sdt
+        ];
+        unset($_SESSION['selected_customer']);
+    }
+}
+
+// --- Tăng/Giảm số lượng (qua POST) ---
+if(isset($_POST['change_qty'])){
+    $maBanh = intval($_POST['MaBanh']);
+    $action = $_POST['change_qty'];
+    if(isset($_SESSION['cart'][$maBanh])){
+        if($action === 'increase'){
+            $_SESSION['cart'][$maBanh]['SoLuong'] += 1;
+        } elseif($action === 'decrease'){
+            $_SESSION['cart'][$maBanh]['SoLuong'] -= 1;
+            if($_SESSION['cart'][$maBanh]['SoLuong'] <= 0){
+                unset($_SESSION['cart'][$maBanh]);
+            }
+        }
+        if(isset($_SESSION['cart'][$maBanh])){
+            $_SESSION['cart'][$maBanh]['ThanhTien'] =
+                $_SESSION['cart'][$maBanh]['SoLuong'] * $_SESSION['cart'][$maBanh]['DonGia'];
+        }
+    }
+}
+
+// =================================
+// 4. LẤY DỮ LIỆU ĐỂ HIỂN THỊ
+// Lấy dữ liệu sau khi đã xử lý hết các hành động
+// =================================
 $khachHangRes = mysqli_query($conn,"SELECT * FROM KhachHang ORDER BY MaKH DESC");
 $loaiBanhRes = mysqli_query($conn,"SELECT * FROM LoaiBanh");
 $loaiBanhArr = [];
@@ -281,6 +261,13 @@ $selectedCustomer = null;
 if(isset($_SESSION['selected_customer'])){
     $selectedCustomer = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM KhachHang WHERE MaKH=".$_SESSION['selected_customer']));
 }
+
+// =================================
+// 5. HIỂN THỊ (VIEW)
+// Include header, sidebar và render HTML
+// =================================
+include 'include/header.php';
+include 'include/sidebar.php';
 ?>
 
 <style>
@@ -504,54 +491,14 @@ height: 90px; /* <--- SỬA Ở ĐÂY */    overflow: hidden; /* Tự động �
     height: 150px; /* giống nhau */
 }
 
-</style>
+/* (CSS cho checkbox-wrapper-11 và pressable-btn, v.v...
+   Toàn bộ CSS còn lại của bạn nằm ở đây) */
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- BÊN TRÁI -->
-        <div class="col-lg-7 left-column">
-            <!-- KHÁCH HÀNG -->
-<!-- KHÁCH HÀNG -->
-<!-- KHÁCH HÀNG -->
-<div class="card left-top">
-  <div class="card-header"><strong>Thông tin khách hàng</strong></div>
-  <div class="card-body d-flex flex-column gap-3">
-
-<!-- Lựa chọn loại khách hàng -->
-<div class="mb-2">
-  <label class="form-label"><strong>Chọn loại khách hàng:</strong></label><br>
-
-  <!-- Khách hàng có sẵn -->
-  <div class="checkbox-wrapper-11 d-inline-block me-3">
-    <input 
-        type="radio" 
-        name="customer_type" 
-        id="existing_customer" 
-        value="existing"
-        class="input-11"
-    />
-    <label for="existing_customer">Khách hàng có sẵn</label>
-  </div>
-
-  <!-- Khách hàng mới -->
-  <div class="checkbox-wrapper-11 d-inline-block">
-    <input 
-        type="radio" 
-        name="customer_type" 
-        id="new_customer" 
-        value="new"
-        class="input-11"
-    />
-    <label for="new_customer">Thêm khách hàng mới</label>
-  </div>
-</div>
-
-<style>
 .checkbox-wrapper-11 {
    position: relative;
    z-index: 1;
 }
-
+/* ... (toàn bộ CSS của bạn) ... */
 .checkbox-wrapper-11 .input-11 {
    display: none;
    visibility: hidden;
@@ -610,26 +557,7 @@ height: 90px; /* <--- SỬA Ở ĐÂY */    overflow: hidden; /* Tự động �
     transform: translateY(-2px); /* Nhấc nút lên 2px */
     box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Thêm bóng mờ */
 }
-</style>
 
-
-    <!-- KHÁCH HÀNG CÓ SẴN -->
-    <div id="existing_customer_form" style="display:none;">
-      <form method="post" class="d-flex gap-2">
-<select name="MaKH" class="form-control flex-grow-1">       
-       <option value="">-- Chọn khách hàng có sẵn --</option>
-          <?php
-          mysqli_data_seek($khachHangRes, 0);
-          while($kh = mysqli_fetch_assoc($khachHangRes)): ?>
-            <option value="<?= $kh['MaKH'] ?>" <?= isset($_SESSION['selected_customer']) && $_SESSION['selected_customer']==$kh['MaKH'] ? 'selected' : '' ?>>
-              <?= htmlspecialchars($kh['HoTen']) ?> (<?= $kh['SDT'] ?>)
-            </option>
-          <?php endwhile; ?>
-        </select>
-<button type="submit" name="select_customer" class="pressable-btn" role="button">
-<span class="text">chọn</span>
-</button>
-<style>
     .pressable-btn {
     touch-action: manipulation;
     position: relative;
@@ -758,18 +686,65 @@ box-shadow: 0 0 0 2px #256176, 0 4px 0 0 #c1d2d9;
     font-weight: 600;
     color: #256176; /* Màu xanh chủ đạo */
 }
-</style>  
-    </form>
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-7 left-column">
+            
+<div class="card left-top">
+  <div class="card-header"><strong>Thông tin khách hàng</strong></div>
+  <div class="card-body d-flex flex-column gap-3">
+
+<div class="mb-2">
+  <label class="form-label"><strong>Chọn loại khách hàng:</strong></label><br>
+  <div class="checkbox-wrapper-11 d-inline-block me-3">
+    <input 
+        type="radio" 
+        name="customer_type" 
+        id="existing_customer" 
+        value="existing"
+        class="input-11"
+    />
+    <label for="existing_customer">Khách hàng có sẵn</label>
+  </div>
+  <div class="checkbox-wrapper-11 d-inline-block">
+    <input 
+        type="radio" 
+        name="customer_type" 
+        id="new_customer" 
+        value="new"
+        class="input-11"
+    />
+    <label for="new_customer">Thêm khách hàng mới</label>
+  </div>
+</div>
+
+    <div id="existing_customer_form" style="display:none;">
+      <form method="post" class="d-flex gap-2">
+        <select name="MaKH" class="form-control flex-grow-1">       
+            <option value="">-- Chọn khách hàng có sẵn --</option>
+            <?php
+            mysqli_data_seek($khachHangRes, 0); // Reset con trỏ mảng kết quả
+            while($kh = mysqli_fetch_assoc($khachHangRes)): ?>
+                <option value="<?= $kh['MaKH'] ?>" <?= isset($_SESSION['selected_customer']) && $_SESSION['selected_customer']==$kh['MaKH'] ? 'selected' : '' ?>>
+                <?= htmlspecialchars($kh['HoTen']) ?> (<?= $kh['SDT'] ?>)
+                </option>
+            <?php endwhile; ?>
+        </select>
+        <button type="submit" name="select_customer" class="pressable-btn" role="button">
+            <span class="text">chọn</span>
+        </button>
+      </form>
     </div>
 
-    <!-- KHÁCH HÀNG MỚI -->
     <div id="new_customer_form" style="display:none;">
       <form method="post" class="d-flex gap-2">
         <input type="text" name="TenKH" class="form-control flex-grow-1" placeholder="Tên khách hàng mới" required>
         <input type="text" name="SDT" class="form-control flex-grow-1" placeholder="Số điện thoại">     
-<button type="submit" name="select_new_customer" class="pressable-btn" role="button">
-<span class="text">chọn</span>
-</button>
+        <button type="submit" name="select_new_customer" class="pressable-btn" role="button">
+            <span class="text">chọn</span>
+        </button>
       </form>
     </div>
 
@@ -797,7 +772,6 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-            <!-- DANH SÁCH SẢN PHẨM -->
             <div class="card left-bottom mt-3">
                 <div class="card-header"><strong>Danh sách sản phẩm</strong></div>
                 <div class="card-body">
@@ -817,47 +791,36 @@ document.addEventListener('DOMContentLoaded', function(){
                           <?php
                             $banhRes = mysqli_query($conn,"SELECT * FROM ThongTinBanh WHERE MaLoaiBanh={$loai['MaLoaiBanh']}");
                             while($b = mysqli_fetch_assoc($banhRes)):
-                                // Số lượng còn lại = tồn kho - số lượng đã thêm vào giỏ
                                 $soLuongConLai = $b['SoLuong'] - ($_SESSION['cart'][$b['MaBanh']]['SoLuong'] ?? 0);
                             ?>
                             <div class="col-md-3 mb-3">
                                 <?php if($soLuongConLai > 0): ?>
-                                    
                                     <form method="post" style="height: 100%;">
                                         <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
-                                        
                                         <button type="submit" name="add_product" class="product-card" title="<?= htmlspecialchars($b['TenBanh']) ?>">
-                                            
                                             <span class="product-card-name">
                                                 <?= htmlspecialchars($b['TenBanh']) ?>
                                             </span>
-                                            
                                             <div>
                                                 <span class="product-card-price"><?= number_format($b['Gia'],0,',','.') ?> đ</span>
                                                 <span class="product-card-stock">Còn: <?= $soLuongConLai ?></span>
                                             </div>
                                         </button>
                                     </form>
-
                                 <?php else: ?>
-
                                     <div class="product-card out-of-stock" title="<?= htmlspecialchars($b['TenBanh']) ?>">
-                                        
                                         <span class="product-card-name">
                                             <?= htmlspecialchars($b['TenBanh']) ?>
                                         </span>
-                                        
                                         <div>
                                             <span class="product-card-price"><?= number_format($b['Gia'],0,',','.') ?> đ</span>
                                             <span class="product-card-stock out-of-stock-text">Hết hàng</span>
                                         </div>
                                     </div>
-                                    
                                 <?php endif; ?>
                             </div>
                             <?php endwhile; ?>
                         </div>
-
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -865,24 +828,20 @@ document.addEventListener('DOMContentLoaded', function(){
             </div>
         </div>
 
-       <!-- BÊN PHẢI -->
-<div class="col-lg-5 right-column">
+       <div class="col-lg-5 right-column">
     <div class="card h-100">
         <div class="card-header"><strong>Đơn hàng tạm</strong></div>
         <div class="card-body d-flex flex-column">
             
            <div class="mb-3 d-flex justify-content-between align-items-center">
-                
                 <div> 
                     <?php
-                    if(isset($_SESSION['selected_customer'])){
-                        $selectedCustomer = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM KhachHang WHERE MaKH=".$_SESSION['selected_customer']));
-                        // Giữ 2 dòng riêng biệt
+                    // Biến $selectedCustomer đã được lấy ở phần "LẤY DỮ LIỆU"
+                    if($selectedCustomer){
                         echo "<h6>Khách hàng: <strong>".htmlspecialchars($selectedCustomer['HoTen'])."</strong></h6>";
                         echo "<h6>Số điện thoại: <strong>".htmlspecialchars($selectedCustomer['SDT'])."</strong></h6>";
                     }
                     elseif(isset($_SESSION['new_customer'])){
-                        // Giữ 2 dòng riêng biệt
                         echo "<h6>Khách hàng mới: <strong>".htmlspecialchars($_SESSION['new_customer']['HoTen'])."</strong></h6>";
                         echo "<h6>Số điện thoại: <strong>".htmlspecialchars($_SESSION['new_customer']['SDT'])."</strong></h6>";
                     }
@@ -891,7 +850,6 @@ document.addEventListener('DOMContentLoaded', function(){
                     }
                     ?>
                 </div>
-
                 <div> 
                     <?php if(isset($_SESSION['selected_customer']) || isset($_SESSION['new_customer'])): ?>
                         <form method="post" style="display:inline;">
@@ -899,12 +857,10 @@ document.addEventListener('DOMContentLoaded', function(){
                         </form>
                     <?php endif; ?>
                 </div>
-
             </div>
 
             <div class="table-responsive mb-3" style="flex-grow:1; overflow-y:auto; max-height:350px;">
                 <table class="table table-cart text-center mb-0">
-                    
                     <thead class="table-dark">
                         <tr>
                             <th>Tên bánh</th>
@@ -953,15 +909,17 @@ document.addEventListener('DOMContentLoaded', function(){
             </div>
 
             <?php if(!empty($_SESSION['cart'])): ?>
-<form method="post" class="d-flex justify-content-end mt-3">
-                            <button class="btn-skew-arrow"  name="checkout" role="button"><span class="text">Thanh toán</span><span class="arrow"><svg width="50px" height="20px" viewBox="0 0 66 43" version="1" xmlns="http://www.w3.org/2000/svg"><g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path class="one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 Z" fill="#FFFFFF"></path></g></svg></span></button>
-                </form>
+            <form method="post" class="d-flex justify-content-end mt-3">
+                <button class="btn-skew-arrow"  name="checkout" role="button">
+                    <span class="text">Thanh toán</span>
+                    <span class="arrow"><svg width="50px" height="20px" viewBox="0 0 66 43" version="1" xmlns="http://www.w3.org/2000/svg"><g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path class="one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 Z" fill="#FFFFFF"></path></g></svg></span>
+                </button>
+            </form>
             <?php endif; ?>
         </div>
     </div>
 </div>
 
-        </div>
     </div>
 </div>
 
@@ -990,4 +948,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include 'include/footer.php'; ?>  
+<?php include 'include/footer.php'; ?>

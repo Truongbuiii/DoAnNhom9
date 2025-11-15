@@ -81,7 +81,7 @@ if ($search !== "") {
       <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
       
       <button class="btn btn-success shadow-rise-btn" data-toggle="modal" data-target="#addModal" role="button">
-        <i class="fas fa-plus"></i> Thêm nhân viên
+       Thêm nhân viên
       </button>
     </div>
 
