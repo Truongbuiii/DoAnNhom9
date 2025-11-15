@@ -598,6 +598,18 @@ height: 90px; /* <--- SỬA Ở ĐÂY */    overflow: hidden; /* Tự động �
 .checkbox-wrapper-11 label::before {
    transition: 0.25s all ease;
 }
+
+/* ==========================
+   HIỆU ỨNG CHO NÚT BỎ CHỌN
+   ========================== */
+.btn-hover-lift {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-hover-lift:hover {
+    transform: translateY(-2px); /* Nhấc nút lên 2px */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Thêm bóng mờ */
+}
 </style>
 
 
@@ -672,6 +684,77 @@ box-shadow: 0 0 0 2px #256176, 0 4px 0 0 #c1d2d9;
     box-shadow: 0 0 0 2px #256176, 0 0 #c1d2d9;
     transform: translate3d(0, 0, -1em);
     }
+    /* ==========================
+   CSS CHO GIỎ HÀNG (BILL)
+   ========================== */
+
+/* Nút [Bỏ chọn khách hàng] */
+.btn-clear-customer {
+    background: none;
+    border: none;
+    color: #dc3545; /* Màu đỏ */
+    font-size: 0.9em;
+    font-weight: bold;
+    padding: 0;
+    cursor: pointer;
+    margin-top: 5px;
+}
+.btn-clear-customer:hover {
+    text-decoration: underline;
+}
+
+/* Table giỏ hàng */
+.table-cart {
+    border: none; /* Bỏ viền table */
+}
+
+/* Căn trái tên bánh cho dễ đọc */
+.table-cart tbody tr td:first-child {
+    text-align: left;
+}
+/* Đường kẻ mờ giữa các item */
+.table-cart tbody tr {
+    border-bottom: 1px solid #dee2e6;
+}
+/* Bỏ viền ở item cuối */
+.table-cart tbody tr:last-child {
+    border-bottom: none; 
+}
+.table-cart tbody td {
+    vertical-align: middle;
+    border: none; /* Bỏ viền của cell */
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+/* Nút SL +/- */
+.btn-qty {
+    background-color: #f1f3f5; /* Màu xám siêu nhạt */
+    border: none;
+    color: #343a40;
+    font-weight: bold;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 1;
+    border-radius: 4px;
+}
+.btn-qty:hover {
+    background-color: #e9ecef;
+}
+
+/* Tổng tiền (giống bill) */
+.cart-summary {
+    border-top: 2px dashed #adb5bd; /* Đường kẻ đứt */
+    padding-top: 15px;
+}
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.25rem; /* To rõ ràng */
+    font-weight: 600;
+    color: #256176; /* Màu xanh chủ đạo */
+}
 </style>  
     </form>
     </div>
@@ -784,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="card h-100">
         <div class="card-header"><strong>Đơn hàng tạm</strong></div>
         <div class="card-body d-flex flex-column">
-            <!-- Thông tin khách hàng -->
+            
             <div class="mb-3">
                 <?php
                 if(isset($_SESSION['selected_customer'])){
@@ -802,16 +885,13 @@ document.addEventListener('DOMContentLoaded', function(){
                 ?>
                 <?php if(isset($_SESSION['selected_customer']) || isset($_SESSION['new_customer'])): ?>
                     <form method="post" style="display:inline;">
-                        <button type="submit" name="clear_customer" class="btn btn-sm btn-warning mt-2">Bỏ chọn khách hàng</button>
-                    </form>
+<button type="submit" name="clear_customer" class="btn btn-sm btn-warning mt-2 btn-hover-lift">Bỏ chọn khách hàng</button>                    </form>
                 <?php endif; ?>
             </div>
 
-            <hr>
-
-            <!-- Bảng sản phẩm -->
             <div class="table-responsive mb-3" style="flex-grow:1; overflow-y:auto; max-height:350px;">
-                <table class="table table-bordered text-center mb-0">
+                <table class="table table-cart text-center mb-0">
+                    
                     <thead class="table-dark">
                         <tr>
                             <th>Tên bánh</th>
@@ -829,18 +909,17 @@ document.addEventListener('DOMContentLoaded', function(){
                         ?>
                         <tr>
                             <td><?= htmlspecialchars($item['TenBanh']) ?></td>
-          <td style="text-align:center;">
-    <form method="post" style="display:flex; justify-content:center; align-items:center; gap:5px;">
-        <input type="hidden" name="MaBanh" value="<?= $maBanh ?>">
-        <button type="submit" name="change_qty" value="decrease" class="btn btn-sm btn-secondary">–</button>
-        <span style="width:30px; text-align:center;"><?= $item['SoLuong'] ?></span>
-        <button type="submit" name="change_qty" value="increase" class="btn btn-sm btn-secondary">+</button>
-    </form>
-</td>
-
+                            <td style="text-align:center;">
+                                <form method="post" style="display:flex; justify-content:center; align-items:center; gap:5px;">
+                                    <input type="hidden" name="MaBanh" value="<?= $maBanh ?>">
+                                    <button type="submit" name="change_qty" value="decrease" class="btn btn-sm btn-qty">–</button>
+                                    <span style="width:30px; text-align:center;"><?= $item['SoLuong'] ?></span>
+                                    <button type="submit" name="change_qty" value="increase" class="btn btn-sm btn-qty">+</button>
+                                </form>
+                            </td>
                             <td><?= number_format($item['ThanhTien'],0,',','.') ?> đ</td>
                             <td>
-                                <a href='?remove=<?= $maBanh ?>' class='btn btn-sm btn-danger'>X</a>
+                                <a href='?remove=<?= $maBanh ?>' class='btn btn-sm btn-outline-danger'>X</a>
                             </td>
                         </tr>
                         <?php
@@ -853,17 +932,16 @@ document.addEventListener('DOMContentLoaded', function(){
                 </table>
             </div>
 
-            <!-- Tổng tiền -->
-         <div class="text-end mb-3 mt-auto">
-                <strong>Tổng: <?= number_format($tongTien,0,',','.') ?> đ</strong>
+            <div class="cart-summary mt-auto">
+                <div class="total-row">
+                    <strong>Tổng cộng:</strong>
+                    <strong><?= number_format($tongTien,0,',','.') ?> đ</strong>
+                </div>
             </div>
 
-            <!-- Thanh toán -->
             <?php if(!empty($_SESSION['cart'])): ?>
-                <form method="post" class="mt-auto">
+                <form method="post">
                     <button class="btn-skew-arrow"  name="checkout" role="button"><span class="text">Thanh toán</span><span class="arrow"><svg width="50px" height="20px" viewBox="0 0 66 43" version="1" xmlns="http://www.w3.org/2000/svg"><g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path class="one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 Z" fill="#FFFFFF"></path></g></svg></span></button>
-
-
                 </form>
             <?php endif; ?>
         </div>
