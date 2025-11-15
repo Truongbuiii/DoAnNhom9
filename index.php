@@ -722,11 +722,14 @@ box-shadow: 0 0 0 2px #256176, 0 4px 0 0 #c1d2d9;
 }
 .table-cart tbody td {
     vertical-align: middle;
-    border: none; /* Bỏ viền của cell */
+    border-right: 1px solid #dee2e6; /* <--- THÊM VIỀN BÊN PHẢI */
     padding-top: 15px;
     padding-bottom: 15px;
 }
-
+/* Xóa viền phải ở cột cuối cùng */
+.table-cart tbody td:last-child {
+    border-right: none;
+}
 /* Nút SL +/- */
 .btn-qty {
     background-color: #f1f3f5; /* Màu xám siêu nhạt */
@@ -895,7 +898,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     <thead class="table-dark">
                         <tr>
                             <th>Tên bánh</th>
-                            <th>SL</th>
+                            <th>Số lượng</th>
                             <th>Thành tiền</th>
                             <th></th>
                         </tr>
