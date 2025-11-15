@@ -150,9 +150,15 @@ if(isset($_POST['update_quantity'])){
 // Chọn khách hàng
 // ==========================
 if(isset($_POST['select_customer'])){
-    $_SESSION['selected_customer'] = intval($_POST['MaKH']);
+    $maKH = intval($_POST['MaKH']);
+    
+    // Chỉ lưu nếu MaKH là một ID hợp lệ (lớn hơn 0)
+    if ($maKH > 0) {
+        $_SESSION['selected_customer'] = $maKH;
+        // Xóa session khách hàng mới (nếu có) để tránh xung đột
+        unset($_SESSION['new_customer']);
+    }
 }
-
 // ==========================
 // ==========================
 // Thêm khách hàng mới
@@ -279,8 +285,13 @@ if(isset($_SESSION['selected_customer'])){
 
 <style>
 .left-column { display: flex; flex-direction: column; height: 85vh; gap: 10px; }
-.left-top { flex: 1; overflow-y: auto; }
-.left-bottom { flex: 2; overflow-y: auto; }
+.left-top { 
+    flex-shrink: 0; /* Không co lại, giữ kích thước nội dung */
+}
+.left-bottom { 
+    flex: 1; /* Lấp đầy toàn bộ không gian còn lại */
+    overflow-y: auto; /* Chỉ mục này được phép cuộn */
+}
 
 .right-column { height: 85vh; display: flex; flex-direction: column; }
 .right-column .card-body { display: flex; flex-direction: column; flex: 1; }
@@ -334,6 +345,13 @@ if(isset($_SESSION['selected_customer'])){
     background: #f5f5f5;
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
 }
+.product-btn strong {
+    display: block; /* Bắt buộc để áp dụng width */
+    width: 95%; /* Chiều rộng tối đa của tên */
+    white-space: nowrap; /* Không cho phép xuống dòng */
+    overflow: hidden; /* Ẩn phần bị tràn */
+    text-overflow: ellipsis; /* Hiển thị dấu "..." */
+}
 
 /* Nếu hết hàng */
 .product-btn.out-of-stock {
@@ -344,7 +362,7 @@ if(isset($_SESSION['selected_customer'])){
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 180px; /* giống nhau */
+    height: 150px; /* giống nhau */
 }
 
 </style>
@@ -360,24 +378,95 @@ if(isset($_SESSION['selected_customer'])){
   <div class="card-header"><strong>Thông tin khách hàng</strong></div>
   <div class="card-body d-flex flex-column gap-3">
 
-    <!-- Lựa chọn loại khách hàng -->
-    <div class="mb-2">
-      <label class="form-label"><strong>Chọn loại khách hàng:</strong></label><br>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="customer_type" id="existing_customer" value="existing">
-        <label class="form-check-label" for="existing_customer">Khách hàng có sẵn</label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="customer_type" id="new_customer" value="new">
-        <label class="form-check-label" for="new_customer">Thêm khách hàng mới</label>
-      </div>
-    </div>
+<!-- Lựa chọn loại khách hàng -->
+<div class="mb-2">
+  <label class="form-label"><strong>Chọn loại khách hàng:</strong></label><br>
+
+  <!-- Khách hàng có sẵn -->
+  <div class="checkbox-wrapper-11 d-inline-block me-3">
+    <input 
+        type="radio" 
+        name="customer_type" 
+        id="existing_customer" 
+        value="existing"
+        class="input-11"
+    />
+    <label for="existing_customer">Khách hàng có sẵn</label>
+  </div>
+
+  <!-- Khách hàng mới -->
+  <div class="checkbox-wrapper-11 d-inline-block">
+    <input 
+        type="radio" 
+        name="customer_type" 
+        id="new_customer" 
+        value="new"
+        class="input-11"
+    />
+    <label for="new_customer">Thêm khách hàng mới</label>
+  </div>
+</div>
+
+<style>
+.checkbox-wrapper-11 {
+   position: relative;
+   z-index: 1;
+}
+
+.checkbox-wrapper-11 .input-11 {
+   display: none;
+   visibility: hidden;
+}
+
+.checkbox-wrapper-11 label {
+   position: relative;
+   padding-left: 2em;
+   padding-right: 1em;
+   line-height: 2;
+   cursor: pointer;
+   display: inline-flex;
+}
+
+.checkbox-wrapper-11 label:before {
+   box-sizing: border-box;
+   content: " ";
+   position: absolute;
+   top: 0.3em;
+   left: 0;
+   display: block;
+   width: 1.4em;
+   height: 1.4em;
+   border: 2px solid #9098A9;
+   border-radius: 6px;
+   z-index: -1;
+}
+
+/* Khi chọn radio */
+.checkbox-wrapper-11 .input-11:checked + label {
+   padding-left: 1em;
+   color: #000102;
+}
+
+.checkbox-wrapper-11 .input-11:checked + label:before {
+   top: 0;
+   width: 100%;
+   height: 2em;
+   background: #65b3cf;
+   border-color: #256176;
+}
+
+.checkbox-wrapper-11 label,
+.checkbox-wrapper-11 label::before {
+   transition: 0.25s all ease;
+}
+</style>
+
 
     <!-- KHÁCH HÀNG CÓ SẴN -->
     <div id="existing_customer_form" style="display:none;">
       <form method="post" class="d-flex gap-2">
-        <select name="MaKH" class="form-select flex-grow-1">
-          <option value="">-- Chọn khách hàng có sẵn --</option>
+<select name="MaKH" class="form-control flex-grow-1">       
+       <option value="">-- Chọn khách hàng có sẵn --</option>
           <?php
           mysqli_data_seek($khachHangRes, 0);
           while($kh = mysqli_fetch_assoc($khachHangRes)): ?>
@@ -386,16 +475,76 @@ if(isset($_SESSION['selected_customer'])){
             </option>
           <?php endwhile; ?>
         </select>
-        <button type="submit" name="select_customer" class="btn btn-primary">Chọn</button>
-      </form>
+<button type="submit" name="select_customer" class="pressable-btn" role="button">
+<span class="text">chọn</span>
+</button>
+<style>
+    .pressable-btn {
+    touch-action: manipulation;
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    outline: none;
+    border: 2px solid #256176;
+    vertical-align: middle;
+    text-decoration: none;
+ font-weight: 600;
+    font-size: 14px; /* <--- Giảm cỡ chữ */
+    color: #256176;
+padding: 5px 16px;
+    background: #f4f7f8;
+    border-radius: 8px;
+    transform-style: preserve-3d;
+    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background 150ms cubic-bezier(0, 0, 0.58, 1);
+    }
+    
+    .pressable-btn::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #256176;
+    border-radius: inherit;
+box-shadow: 0 0 0 2px #256176, 0 4px 0 0 #c1d2d9;
+    transform: translate3d(0, 6px, -1em);
+    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
+    }
+    
+    .pressable-btn:hover {
+    background: #f4f7f8;
+    transform: translate(0, 2px);
+    }
+    
+    .pressable-btn:hover::before {
+    box-shadow: 0 0 0 2px #256176, 0 2px 0 0 #c1d2d9;
+    transform: translate3d(0, 4px, -1em);
+    }
+    
+    .pressable-btn:active {
+    background: #c1d2d9;
+    transform: translate(0em, 6px);
+    }
+    
+    .pressable-btn:active::before {
+    box-shadow: 0 0 0 2px #256176, 0 0 #c1d2d9;
+    transform: translate3d(0, 0, -1em);
+    }
+</style>  
+    </form>
     </div>
 
     <!-- KHÁCH HÀNG MỚI -->
     <div id="new_customer_form" style="display:none;">
       <form method="post" class="d-flex gap-2">
         <input type="text" name="TenKH" class="form-control flex-grow-1" placeholder="Tên khách hàng mới" required>
-        <input type="text" name="SDT" class="form-control flex-grow-1" placeholder="Số điện thoại">
-        <button type="submit" name="select_new_customer" class="btn btn-success">Chọn</button>
+        <input type="text" name="SDT" class="form-control flex-grow-1" placeholder="Số điện thoại">     
+<button type="submit" name="select_new_customer" class="pressable-btn" role="button">
+<span class="text">chọn</span>
+</button>
       </form>
     </div>
 
@@ -557,7 +706,76 @@ document.addEventListener('DOMContentLoaded', function(){
             <!-- Thanh toán -->
             <?php if(!empty($_SESSION['cart'])): ?>
                 <form method="post" class="mt-auto">
-                    <button name="checkout" class="btn btn-success w-100">Thanh toán</button>
+                    <button class="btn-skew-arrow"  name="checkout" role="button"><span class="text">Thanh toán</span><span class="arrow"><svg width="50px" height="20px" viewBox="0 0 66 43" version="1" xmlns="http://www.w3.org/2000/svg"><g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path class="one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 Z" fill="#FFFFFF"></path></g></svg></span></button>
+
+<style>
+    .btn-skew-arrow {
+    display: flex;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background: #256176;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transform: skewX(-15deg);
+    transition: 1s;
+    box-shadow: 6px 6px 0 #c1d2d9;
+    }
+    
+    .btn-skew-arrow:focus {
+    outline: none;
+    }
+    
+    .btn-skew-arrow:hover {
+    transition: 0.5s;
+    box-shadow: 10px 10px 0 #25aaaa;
+    }
+    
+    .btn-skew-arrow .arrow {
+    transition: 0.5s;
+    margin-right: 0;
+    }
+    
+    .btn-skew-arrow:hover .arrow {
+    margin-right: 45px;
+    }
+    
+    .btn-skew-arrow .text {
+    transform: skewX(15deg);
+    }
+    
+    .btn-skew-arrow .one {
+    transition: 0.4s;
+    transform: translateX(-60%);
+    }
+    
+    .btn-skew-arrow .two {
+    transition: 0.5s;
+    transform: translateX(-30%);
+    }
+    
+    .btn-skew-arrow:hover .three {
+    animation: color_anim 1s infinite 0.2s;
+    }
+    
+    .btn-skew-arrow:hover .one {
+    transform: translateX(0%);
+    animation: color_anim 1s infinite 0.6s;
+    }
+    
+    .btn-skew-arrow:hover .two {
+    transform: translateX(0%);
+    animation: color_anim 1s infinite 0.4s;
+    }
+    
+    @keyframes color_anim {
+    0% { fill: white; }
+    50% { fill: #25aaaa; }
+    100% { fill: white; }
+    }
+</style>
                 </form>
             <?php endif; ?>
         </div>
