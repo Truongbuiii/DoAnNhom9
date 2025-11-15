@@ -284,6 +284,145 @@ if(isset($_SESSION['selected_customer'])){
 ?>
 
 <style>
+    /* ==========================
+   CSS CHO CARD SẢN PHẨM MỚI
+   ========================== */
+.product-card {
+    width: 100%;
+height: 170px; /* <--- SỬA Ở ĐÂY */    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 12px;
+    text-align: left; /* Quan trọng: Đảm bảo căn lề trái */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+}
+
+.product-card:hover {
+    transform: translateY(-4px); /* Hiệu ứng nhấc lên khi hover */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    border-color: #256176; /* Viền màu xanh khi hover */
+}
+
+/* Tên sản phẩm */
+.product-card-name {
+    font-size: 1.1rem; 
+    font-weight: 600; 
+    color: #333;
+    display: block;
+height: 90px; /* <--- SỬA Ở ĐÂY */    overflow: hidden; /* Tự động ẩn nếu tên dài hơn nữa */
+}
+
+/* Giá sản phẩm */
+.product-card-price {
+    display: block; 
+    font-size: 1.1rem;
+    font-weight: 700; /* Giá tiền in đậm */
+    color: #256176; /* Màu xanh chủ đạo */
+    margin-top: 10px; 
+}
+
+/* Số lượng tồn kho */
+.product-card-stock {
+    display: block; 
+    font-size: 0.9rem; 
+    color: #757575; /* Màu xám */
+    margin-top: 4px;
+}
+
+/* ==========================
+   CSS CHO SẢN PHẨM HẾT HÀNG
+   ========================== */
+.product-card.out-of-stock {
+    background: #f8f9fa; /* Nền xám nhạt */
+    color: #adb5bd;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+/* Tắt hiệu ứng hover cho thẻ hết hàng */
+.product-card.out-of-stock:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: #e0e0e0;
+}
+/* Giá mờ đi */
+.product-card.out-of-stock .product-card-price {
+    color: #adb5bd;
+}
+/* Chữ "Hết hàng" màu đỏ */
+.product-card-stock.out-of-stock-text {
+    color: #dc3545;
+    font-weight: 700;
+}
+    .btn-skew-arrow {
+    display: flex;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background: #256176;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transform: skewX(-15deg);
+    transition: 1s;
+    box-shadow: 6px 6px 0 #c1d2d9;
+    }
+    
+    .btn-skew-arrow:focus {
+    outline: none;
+    }
+    
+    .btn-skew-arrow:hover {
+    transition: 0.5s;
+    box-shadow: 10px 10px 0 #25aaaa;
+    }
+    
+    .btn-skew-arrow .arrow {
+    transition: 0.5s;
+    margin-right: 0;
+    }
+    
+    .btn-skew-arrow:hover .arrow {
+    margin-right: 45px;
+    }
+    
+    .btn-skew-arrow .text {
+    transform: skewX(15deg);
+    }
+    
+    .btn-skew-arrow .one {
+    transition: 0.4s;
+    transform: translateX(-60%);
+    }
+    
+    .btn-skew-arrow .two {
+    transition: 0.5s;
+    transform: translateX(-30%);
+    }
+    
+    .btn-skew-arrow:hover .three {
+    animation: color_anim 1s infinite 0.2s;
+    }
+    
+    .btn-skew-arrow:hover .one {
+    transform: translateX(0%);
+    animation: color_anim 1s infinite 0.6s;
+    }
+    
+    .btn-skew-arrow:hover .two {
+    transform: translateX(0%);
+    animation: color_anim 1s infinite 0.4s;
+    }
+    
+    @keyframes color_anim {
+    0% { fill: white; }
+    50% { fill: #25aaaa; }
+    100% { fill: white; }
+    }
 .left-column { display: flex; flex-direction: column; height: 85vh; gap: 10px; }
 .left-top { 
     flex-shrink: 0; /* Không co lại, giữ kích thước nội dung */
@@ -589,7 +728,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         <?php foreach($loaiBanhArr as $index=>$loai): ?>
                         <div class="tab-pane fade <?= $index==0?'show active':'' ?>" id="tab-<?= $loai['MaLoaiBanh'] ?>">
                             <div class="row">
-                            <?php
+                          <?php
                             $banhRes = mysqli_query($conn,"SELECT * FROM ThongTinBanh WHERE MaLoaiBanh={$loai['MaLoaiBanh']}");
                             while($b = mysqli_fetch_assoc($banhRes)):
                                 // Số lượng còn lại = tồn kho - số lượng đã thêm vào giỏ
@@ -597,22 +736,38 @@ document.addEventListener('DOMContentLoaded', function(){
                             ?>
                             <div class="col-md-3 mb-3">
                                 <?php if($soLuongConLai > 0): ?>
-                            <form method="post">
-                                <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
-                                <button type="submit" name="add_product" class="product-btn">
-                                    <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
-                                    <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
-                                    <small>Số lượng còn: <?= $soLuongConLai ?></small>
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <div class="product-btn out-of-stock">
-                                <strong><?= htmlspecialchars($b['TenBanh']) ?></strong><br>
-                                <small><?= number_format($b['Gia'],0,',','.') ?> đ</small><br>
-                                <small><strong>Hết hàng</strong></small>
-                            </div>
-                        <?php endif; ?>
+                                    
+                                    <form method="post" style="height: 100%;">
+                                        <input type="hidden" name="MaBanh" value="<?= $b['MaBanh'] ?>">
+                                        
+                                        <button type="submit" name="add_product" class="product-card" title="<?= htmlspecialchars($b['TenBanh']) ?>">
+                                            
+                                            <span class="product-card-name">
+                                                <?= htmlspecialchars($b['TenBanh']) ?>
+                                            </span>
+                                            
+                                            <div>
+                                                <span class="product-card-price"><?= number_format($b['Gia'],0,',','.') ?> đ</span>
+                                                <span class="product-card-stock">Còn: <?= $soLuongConLai ?></span>
+                                            </div>
+                                        </button>
+                                    </form>
 
+                                <?php else: ?>
+
+                                    <div class="product-card out-of-stock" title="<?= htmlspecialchars($b['TenBanh']) ?>">
+                                        
+                                        <span class="product-card-name">
+                                            <?= htmlspecialchars($b['TenBanh']) ?>
+                                        </span>
+                                        
+                                        <div>
+                                            <span class="product-card-price"><?= number_format($b['Gia'],0,',','.') ?> đ</span>
+                                            <span class="product-card-stock out-of-stock-text">Hết hàng</span>
+                                        </div>
+                                    </div>
+                                    
+                                <?php endif; ?>
                             </div>
                             <?php endwhile; ?>
                         </div>
@@ -699,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function(){
             </div>
 
             <!-- Tổng tiền -->
-            <div class="text-end mb-3">
+         <div class="text-end mb-3 mt-auto">
                 <strong>Tổng: <?= number_format($tongTien,0,',','.') ?> đ</strong>
             </div>
 
@@ -708,74 +863,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 <form method="post" class="mt-auto">
                     <button class="btn-skew-arrow"  name="checkout" role="button"><span class="text">Thanh toán</span><span class="arrow"><svg width="50px" height="20px" viewBox="0 0 66 43" version="1" xmlns="http://www.w3.org/2000/svg"><g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><path class="one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 Z" fill="#FFFFFF"></path><path class="three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 Z" fill="#FFFFFF"></path></g></svg></span></button>
 
-<style>
-    .btn-skew-arrow {
-    display: flex;
-    padding: 12px 28px;
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
-    background: #256176;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transform: skewX(-15deg);
-    transition: 1s;
-    box-shadow: 6px 6px 0 #c1d2d9;
-    }
-    
-    .btn-skew-arrow:focus {
-    outline: none;
-    }
-    
-    .btn-skew-arrow:hover {
-    transition: 0.5s;
-    box-shadow: 10px 10px 0 #25aaaa;
-    }
-    
-    .btn-skew-arrow .arrow {
-    transition: 0.5s;
-    margin-right: 0;
-    }
-    
-    .btn-skew-arrow:hover .arrow {
-    margin-right: 45px;
-    }
-    
-    .btn-skew-arrow .text {
-    transform: skewX(15deg);
-    }
-    
-    .btn-skew-arrow .one {
-    transition: 0.4s;
-    transform: translateX(-60%);
-    }
-    
-    .btn-skew-arrow .two {
-    transition: 0.5s;
-    transform: translateX(-30%);
-    }
-    
-    .btn-skew-arrow:hover .three {
-    animation: color_anim 1s infinite 0.2s;
-    }
-    
-    .btn-skew-arrow:hover .one {
-    transform: translateX(0%);
-    animation: color_anim 1s infinite 0.6s;
-    }
-    
-    .btn-skew-arrow:hover .two {
-    transform: translateX(0%);
-    animation: color_anim 1s infinite 0.4s;
-    }
-    
-    @keyframes color_anim {
-    0% { fill: white; }
-    50% { fill: #25aaaa; }
-    100% { fill: white; }
-    }
-</style>
+
                 </form>
             <?php endif; ?>
         </div>
