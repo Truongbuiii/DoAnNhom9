@@ -2,20 +2,35 @@
 include '../include/header.php'; 
 include '../include/sidebar.php'; 
 
-
+// ======== HỎI XÁC NHẬN XÓA (LẦN 1) ========
+if (isset($_GET['kiemtraxoa'])) {
+    $ma = intval($_GET['kiemtraxoa']);
+    $ten = urldecode($_GET['ten'] ?? '');
+    $tenEsc = htmlspecialchars($ten);
+    
+    echo "
+    <div class='bg-light border shadow-lg p-4 rounded text-center' 
+         style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
+        
+        <h5>Bạn có chắc chắn muốn xóa khách hàng \"{$tenEsc}\"?</h5>
+        <div class='d-flex justify-content-center gap-2 mt-3'>
+            <a href='QuanLyKhachHang.php?xacnhanxoa=$ma&ten=" . urlencode($ten) . "' class='btn btn-danger px-4'>Xóa</a>
+            <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
+        </div>
+    </div>
+    ";
+}
 
 // 🗑️ Xử lý xóa hoặc khóa khách hàng
-if (isset($_GET['xoa'])) {
-    $ma = intval($_GET['xoa']);
+if (isset($_GET['xacnhanxoa'])) {
+$ma = intval($_GET['xacnhanxoa']);
     $ten = urldecode($_GET['ten'] ?? '');
-
-    // Kiểm tra khách hàng có đơn hàng chưa
-    $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");
-
-    if ($kiemTra && $kiemTra->num_rows > 0) {
-        // Có đơn hàng rồi → hỏi người dùng có muốn khóa thay vì xóa
+    $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");    if ($kiemTra && $kiemTra->num_rows > 0) {
+        // Có đơn hàng rồi → hỏi người dùng có muốn khóa
         echo "
-        <div class='position-fixed top-50 start-50 translate-middle bg-light border shadow-lg p-4 rounded text-center' style='z-index:1055;'>
+        <div class='bg-light border shadow-lg p-4 rounded text-center' 
+             style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
+            
             <h5>Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
             <p>Bạn có muốn <b>Khóa</b> khách hàng này không?</p>
             <div class='d-flex justify-content-center gap-2 mt-3'>
@@ -28,18 +43,15 @@ if (isset($_GET['xoa'])) {
         // Không có đơn hàng → xóa luôn
         if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
             echo "
-            <div class='position-fixed top-50 start-50 translate-middle bg-success text-white p-4 rounded shadow text-center' style='z-index:1055;'>
+            <div class='bg-success text-white p-4 rounded shadow text-center' 
+                 style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
                  Đã xóa khách hàng thành công!
             </div>
             <script>
                 setTimeout(() => window.location.href='QuanLyKhachHang.php', 1200);
             </script>";
-        } else {
-            echo "
-            <div class='alert alert-danger mt-3'>
-                 Lỗi khi xóa khách hàng: " . htmlspecialchars($conn->error) . "
-            </div>";
-        }
+        } 
+        // ... (phần code lỗi) ...
     }
 }
 
@@ -48,7 +60,8 @@ if (isset($_GET['khoa'])) {
     $ma = intval($_GET['khoa']);
     if ($conn->query("UPDATE KhachHang SET TinhTrang = 0 WHERE MaKH = $ma")) {
         echo "
-        <div class='position-fixed top-50 start-50 translate-middle bg-warning text-dark p-4 rounded shadow text-center' style='z-index:1055;'>
+        <div class='bg-warning text-dark p-4 rounded shadow text-center' 
+             style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
             Đã khóa khách hàng thành công!
         </div>
         <script>
@@ -207,11 +220,10 @@ if (isset($_GET['khoa'])) {
                                         data-tinhtrang='$tinhtrang'>
                                     <i class='fas fa-edit'></i> Sửa
                                 </button>
-                                <a href='QuanLyKhachHang.php?xoa=$ma&ten=" . urlencode($ten) . "' 
-                                   class='btn btn-danger btn-sm'
-                                   onclick='return confirm(\"Bạn có chắc chắn muốn xóa khách hàng $ten không?\")'>
-                                    <i class='fas fa-trash'></i> Xóa
-                                </a>
+                               <a href='QuanLyKhachHang.php?kiemtraxoa=$ma&ten=" . urlencode($ten) . "' 
+   class='btn btn-danger btn-sm'>
+    <i class='fas fa-trash'></i> Xóa
+</a>
                             </td>
                         </tr>";
                     }
@@ -275,11 +287,33 @@ if (isset($_GET['khoa'])) {
 </div>
 
 <style>
-.form-select {
-    height: calc(2.25rem + 2px);
-    font-size: 1rem;
-    border-radius: 5px;
+/* 1. HIỆU ỨNG HOVER CHO TẤT CẢ CÁC NÚT */
+.btn {
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bóng mờ nhẹ ban đầu */
 }
+.btn:hover {
+    transform: translateY(-2px); /* Nhấc nút lên 2px */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Thêm bóng mờ khi hover */
+}
+/* Giữ màu nền của nút Hủy trong modal Sửa */
+.btn-outline-secondary:hover {
+  background-color: #e9ecef;
+}
+
+/* 2. HIỆU ỨNG HOVER CHO BẢNG */
+.table-bordered tbody tr:hover {
+    background-color: #f8f9fa; /* Màu xám siêu nhạt */
+    cursor: default;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* 3. GIÃN CÁCH ICON TRONG NÚT */
+.btn .fas {
+    margin-right: 5px;
+}
+
+/* 4. CSS CÓ SẴN CỦA BẠN (FORM INPUTS) */
 .form-control, .form-select {
   font-size: 15px;
   padding: 10px 14px;
@@ -289,17 +323,6 @@ if (isset($_GET['khoa'])) {
 .form-control:focus, .form-select:focus {
   border-color: #f0ad4e;
   box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
-}
-.btn-success {
-  background-color: #28a745;
-  border: none;
-  transition: 0.2s;
-}
-.btn-success:hover {
-  background-color: #218838;
-}
-.btn-outline-secondary:hover {
-  background-color: #e9ecef;
 }
 </style>
 
