@@ -7,33 +7,42 @@ include '../include/sidebar.php';
 // ===============================================
 ?>
 <style>
-    /* 1. Hiệu ứng "shadow rise" cho nút */
-    .shadow-rise-btn {
-        transition: all 0.2s ease-in-out;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .shadow-rise-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    
-    /* 2. Giãn cách icon & text */
-    .btn .fas {
-        margin-right: 5px;
-    }
+/* 1. Hiệu ứng "shadow rise" cho nút */
+.shadow-rise-btn {
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.shadow-rise-btn:hover {
+    transform: translateY(-2px); /* Nhấc nút lên 2px */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Thêm bóng mờ */
+}
 
-   /* 3. Sửa nút "X" trong modal (Quan trọng) */
+/* 2. Giãn cách icon & text */
+.btn .fas {
+    margin-right: 5px;
+}
+
+/* 3. Sửa nút "X" trong modal (Quan trọng) */
 .modal-header .close {
+    position: relative; 
+    z-index: 9999; 
     background: none !important;
     border: none !important;
     opacity: 0.7;
-    color: #fff !important; /* Chữ X màu trắng */
+    color: #fff !important; 
     font-size: 1.5rem;
     text-shadow: none !important;
     box-shadow: none !important;
 }
 .modal-header .close:hover {
     opacity: 1;
+}
+
+/* 4. Thêm hiệu ứng hover cho bảng */
+.table-bordered tbody tr:hover {
+    background-color: #f5f5f5; /* Màu xám nhạt */
+    cursor: default; 
+    transition: background-color 0.2s ease-in-out;
 }
 </style>
 
@@ -77,13 +86,16 @@ if ($search !== "") {
         </form>
 
   <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-      <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
-      
-      <button class="btn btn-success shadow-rise-btn" data-toggle="modal" data-target="#addModal" role="button">
-       Thêm nhân viên
-      </button>
-    </div>
+   <div class="card-header py-3 d-flex justify-content-between align-items-center">
+    <h6 class="m-0 font-weight-bold text-primary">Danh sách nhân viên</h6>
+    
+    <button class="btn btn-success shadow-rise-btn" 
+            data-bs-toggle="modal" 
+            data-bs-target="#addModal" 
+            role="button">
+        Thêm nhân viên
+    </button>
+</div>
 
     <div class="card-body">
       <div class="table-responsive">
@@ -152,9 +164,9 @@ if ($search !== "") {
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="nhanvien_add_action.php" class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Thêm nhân viên</h5>
-<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>      </div>
+<div class="modal-header bg-primary text-white">
+  <h5 class="modal-title">Thêm nhân viên</h5> <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">×</button>
+</div>
 
       <div class="modal-body">
         <div class="mb-3">
@@ -193,9 +205,9 @@ if ($search !== "") {
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="nhanvien_update.php" class="modal-content">
-      <div class="modal-header bg-primary text-white">
-       <h5 class="modal-title">Sửa thông tin nhân viên</h5>
-<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>      </div>
+<div class="modal-header bg-primary text-white">
+  <h5 class="modal-title">Sửa thông tin nhân viên</h5> <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">×</button>
+</div>
 
       <div class="modal-body">
         <input type="hidden" name="MaNV" id="edit-id">
@@ -249,8 +261,11 @@ if ($search !== "") {
       document.getElementById('edit-matkhau').value = button.dataset.matkhau;
       document.getElementById('edit-tinhtrang').value = button.dataset.tinhtrang;
       document.getElementById('edit-phanquyen').value = button.dataset.phanquyen;
-      $('#editModal').modal('show');
-    });
+// 2. Lấy đối tượng modal
+      var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+      
+      // 3. Hiển thị modal (thay cho lệnh jQuery cũ)
+      editModal.show();    });
   });
 </script>
 

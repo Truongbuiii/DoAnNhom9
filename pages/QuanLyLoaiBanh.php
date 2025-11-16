@@ -28,10 +28,27 @@ if (isset($_POST['luu_sua'])) {
         $errMsg = "Lỗi khi cập nhật: " . htmlspecialchars($conn->error);
     }
 }
+// ✅ THÊM KHỐI MỚI NÀY ĐỂ HỎI LẦN 1
+// ======== HỎI XÁC NHẬN XÓA (LẦN 1) ========
+if (isset($_GET['kiemtraxoa'])) {
+    $ma = intval($_GET['kiemtraxoa']);
+    $ten = urldecode($_GET['ten'] ?? '');
+    $tenEsc = htmlspecialchars($ten);
 
+    echo "<div id='overlay'></div>";
+    echo "
+    <div class='popup'>
+        <h5>Bạn có chắc chắn muốn xóa \"{$tenEsc}\"?</h5>        
+        <div class='d-flex justify-content-center mt-3'>
+            <a href='QuanLyLoaiBanh.php?xacnhanxoa={$ma}&ten=" . urlencode($ten) . "' class='btn btn-danger btn-popup'>Xóa</a>
+            
+            <a href='QuanLyLoaiBanh.php' class='btn btn-secondary btn-popup ms-3'>Hủy</a>
+        </div>
+    </div>";
+}
 // ======== XỬ LÝ XÓA HOẶC HIỂN THỊ HỘP KHÓA ========
-if (isset($_GET['xoa'])) {
-    $ma = intval($_GET['xoa']);
+if (isset($_GET['xacnhanxoa'])) {
+    $ma = intval($_GET['xacnhanxoa']);
     $ten = urldecode($_GET['ten'] ?? '');
     // Kiểm tra có sản phẩm thuộc loại này không
     $sqlCheckSP = "SELECT COUNT(*) AS TongSP FROM ThongTinBanh WHERE MaLoaiBanh = $ma";
@@ -40,26 +57,19 @@ if (isset($_GET['xoa'])) {
     if ($resSP) {
         $tongSP = (int)$resSP->fetch_assoc()['TongSP'];
     }
-    // Hiển thị overlay + popup
-    echo "<style>
-    #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; animation: fadeIn .25s ease; }
-    .popup { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(1); background: #fff; border-radius:10px; padding:28px 30px; z-index:1055; box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align:center; animation: popupShow .25s ease; }
-    .popup h5 { margin-bottom:12px; }
-    .btn-popup { padding:8px 18px; border-radius:6px; }
-    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-    @keyframes popupShow { from { transform: translate(-50%,-50%) scale(.92); opacity:0 } to { transform: translate(-50%,-50%) scale(1); opacity:1 } }
-    </style>";
-
+    
     echo "<div id='overlay'></div>";
-    if ($tongSP > 0) {
+   if ($tongSP > 0) {
         $tenEsc = htmlspecialchars($ten);
         echo "
         <div class='popup'>
-            <h5>⚠️ Loại bánh \"{$tenEsc}\" hiện đang có sản phẩm!</h5>
+            <h5>Loại bánh \"{$tenEsc}\" hiện đang có sản phẩm!</h5>
             <p>Bạn có muốn <b>ẩn (khóa)</b> loại bánh này không?</p>
-            <div class='d-flex justify-content-center gap-2 mt-3'>
+            
+            <div class='d-flex justify-content-center mt-3'>
                 <a href='QuanLyLoaiBanh.php?khoa={$ma}' class='btn btn-warning btn-popup'>Khóa</a>
-                <a href='QuanLyLoaiBanh.php' class='btn btn-secondary btn-popup'>Hủy</a>
+                
+                <a href='QuanLyLoaiBanh.php' class='btn btn-secondary btn-popup ms-2'>Hủy</a>
             </div>
         </div>";
     } else {
@@ -74,7 +84,6 @@ if (isset($_GET['xoa'])) {
             <div class='popup' style='background:#dc3545;color:#fff;'>Lỗi khi xóa: " . htmlspecialchars($conn->error) . " </div>";
         }
     }
-    exit;
 }
 
 // ======== XỬ LÝ KHÓA ========
@@ -91,6 +100,88 @@ if (isset($_GET['khoa'])) {
     }
 }
 ?>
+
+
+<style>
+/* 1. HIỆU ỨNG HOVER CHO NÚT (SHADOW RISE) */
+.shadow-rise-btn {
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.shadow-rise-btn:hover {
+    transform: translateY(-2px); /* Nhấc nút lên 2px */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Thêm bóng mờ */
+}
+
+/* 2. HIỆU ỨNG HOVER CHO BẢNG */
+.table-bordered tbody tr:hover {
+    background-color: #f8f9fa; /* Màu xám siêu nhạt */
+    cursor: default; 
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* 3. SỬA MÀU CHỮ TRÊN BADGE */
+.badge.bg-success,
+.badge.bg-danger {
+    color: #fff !important; /* Luôn dùng chữ trắng trên nền xanh/đỏ */
+}
+/* Tăng kích thước badge một chút */
+.badge.px-3.py-2 {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* 4. GIÃN CÁCH ICON TRONG NÚT */
+.btn .fas {
+    margin-right: 5px;
+}
+
+/* 5. CSS CHO FORM (ĐÃ GỘP) */
+
+/* 5a. Form tìm kiếm (bên ngoài) */
+form.d-flex.flex-wrap.gap-3 {
+    justify-content: flex-start;
+    gap: 1rem 1.5rem;
+}
+
+/* 5b. Hiệu ứng focus cho form bên ngoài (tìm kiếm) */
+/* Dùng :not(.shadow-sm) để tránh xung đột với form trong modal */
+.form-control:not(.shadow-sm):focus, 
+.form-select:not(.shadow-sm):focus {
+    border-color: #f0ad4e; /* Đổi màu focus cho hợp với nút Sửa */
+    box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
+}
+
+/* 5c. Nâng cấp form có class .shadow-sm (cho cả modal và form 'Thêm') */
+.form-control.shadow-sm,
+.form-select.shadow-sm {
+    border: 1px solid #ced4da;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04); /* Thêm bóng mờ nhẹ */
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hiệu ứng "nâng lên" khi focus form có .shadow-sm */
+.form-control.shadow-sm:focus,
+.form-select.shadow-sm:focus {
+    border-color: #f0ad4e; /* Màu vàng giống nút Sửa */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Bóng mờ to hơn */
+    transform: translateY(-1px); /* Nâng lên một chút */
+}
+/* 6. CSS CHO POPUP XÓA */
+#overlay { 
+    position: fixed; top:0; left:0; width:100%; height:100%; 
+    background: rgba(0,0,0,0.5); z-index:1050; animation: fadeIn .25s ease; 
+}
+.popup { 
+    position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(1); 
+    background: #fff; border-radius:10px; padding:28px 30px; z-index:1055; 
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align:center; animation: popupShow .25s ease; 
+}
+.popup h5 { margin-bottom:12px; }
+.btn-popup { padding:8px 18px; border-radius:6px; }
+@keyframes fadeIn { from {opacity:0} to {opacity:1} }
+@keyframes popupShow { from { transform: translate(-50%,-50%) scale(.92); opacity:0 } to { transform: translate(-50%,-50%) scale(1); opacity:1 } }
+</style>
 
 <div class="container-fluid">
     <h2 class="text-center mb-4 text-primary">Quản lý loại bánh</h2>
@@ -112,11 +203,11 @@ if (isset($_GET['khoa'])) {
     </div>
     
     <div class="d-flex gap-2 align-items-end">
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary shadow-rise-btn">
             <i class="fas fa-search"></i> Tìm
         </button>
         <?php if (!empty($_GET['tim'])): ?>
-            <a href="QuanLyLoaiBanh.php" class="btn btn-secondary">Xóa</a>
+            <a href="QuanLyLoaiBanh.php" class="btn btn-secondary shadow-rise-btn">Xóa</a>
         <?php endif; ?>
     </div>
 </form>
@@ -127,14 +218,21 @@ if (isset($_GET['khoa'])) {
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
         <h5 class="text-primary mb-2 mb-md-0">Danh sách loại bánh</h5>
 
-        <!-- Form thêm loại bánh (nằm bên phải) -->
-        <form method="POST" action="" class="d-flex gap-2 align-items-end flex-wrap">
-            <div style="min-width:200px;">
-                <label for="tenLoai" class="form-label mb-0">Tên loại bánh</label>
-                <input type="text" class="form-control" id="tenLoai" name="tenLoai" placeholder="Nhập tên loại bánh..." required>
-            </div>
-            <button type="submit" name="them" class="btn btn-success">Thêm</button>
-        </form>
+ <form method="POST" action="" class="d-flex align-items-end flex-wrap">
+    <div style="min-width:200px;">
+        <label for="tenLoai" class="form-label fw-semibold mb-1">Tên loại bánh</label>
+        <input type="text" 
+               class="form-control rounded-3 shadow-sm" 
+               id="tenLoai" 
+               name="tenLoai" 
+               placeholder="Nhập tên loại bánh..." 
+               required>
+    </div>
+    
+    <button type="submit" 
+            name="them" 
+            class="btn btn-success shadow-rise-btn rounded-3 ms-2">Thêm</button>
+</form>
     </div>
 
     <!-- Bảng hiển thị loại bánh -->
@@ -172,17 +270,16 @@ if (isset($_GET['khoa'])) {
                         <td>{$ten}</td>
                         <td>{$badge}</td>
                         <td>
-                            <button class='btn btn-warning btn-sm btn-edit me-2' 
+                            <button class='btn btn-warning btn-sm btn-edit me-2 shadow-rise-btn' 
                                     data-id='{$ma}' 
                                     data-ten=\"" . htmlspecialchars($loai['TenLoaiBanh'], ENT_QUOTES) . "\" 
                                     data-tinhtrang='{$tinhtrang}'>
                                 <i class='fas fa-edit'></i> Sửa
                             </button>
-                            <a href='QuanLyLoaiBanh.php?xoa={$ma}&ten=" . urlencode($loai['TenLoaiBanh']) . "' 
-                               class='btn btn-danger btn-sm' 
-                               onclick='return confirm(\"⚠️ Bạn có chắc chắn muốn xóa loại bánh " . addslashes($loai['TenLoaiBanh']) . " không?\")'>
-                                <i class='fas fa-trash'></i> Xóa
-                            </a>
+                           <a href='QuanLyLoaiBanh.php?kiemtraxoa={$ma}&ten=" . urlencode($loai['TenLoaiBanh']) . "' 
+   class='btn btn-danger btn-sm shadow-rise-btn'>
+    <i class='fas fa-trash'></i> Xóa
+</a>
                         </td>
                     </tr>";
                 }
@@ -219,31 +316,15 @@ if (isset($_GET['khoa'])) {
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 px-4">
-                    <button type="button" class="btn btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" name="luu_sua" class="btn btn-success rounded-3 px-4 fw-semibold"> Lưu thay đổi </button>
+                    <button type="button" class="btn btn-outline-secondary rounded-3 px-4 shadow-rise-btn" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" name="luu_sua" class="btn btn-success rounded-3 px-4 fw-semibold shadow-rise-btn"> Lưu thay đổi </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<style>
-    form.d-flex.flex-wrap.gap-3 {
-    justify-content: flex-start;
-    gap: 1rem 1.5rem;
-}
 
-.form-select, .form-control {
-    font-size: 15px;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    transition: all 0.2s ease-in-out;
-}
-.form-control:focus, .form-select:focus {
-    border-color: #f0ad4e;
-    box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
