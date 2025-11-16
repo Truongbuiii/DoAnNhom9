@@ -101,17 +101,15 @@ if ($result === false) {
 </div>
 </div>
 
-<!-- Modal xem chi tiết -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-body" id="order-detail-content">
-        <p class="text-center text-muted">Đang tải dữ liệu...</p>
+      <div class="modal-body p-0" id="order-detail-content">
+        <p class="text-center text-muted p-5">Đang tải dữ liệu...</p>
       </div>
     </div>
   </div>
 </div>
-
 <script>
 // Xem chi tiết đơn hàng (AJAX)
 document.querySelectorAll('.btn-detail').forEach(btn => {

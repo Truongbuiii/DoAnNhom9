@@ -1,24 +1,14 @@
 <?php
 include '../db/connect.php';
 
-
 // ==========================
-// Kiểm tra mã đơn hàng
+// (Logic PHP của bạn, giữ nguyên)
 // ==========================
 if (!isset($_GET['MaDon'])) {
-    echo "<div class='container mt-4'>
-            <div class='alert alert-danger text-center'>
-                Không tìm thấy mã đơn hàng.
-            </div>
-          </div>";
+    echo "<div class='container mt-4'><div class='alert alert-danger text-center'>Không tìm thấy mã đơn hàng.</div></div>";
     exit;
 }
-
 $maDon = $_GET['MaDon'];
-
-// ==========================
-// Truy vấn thông tin đơn hàng
-// ==========================
 $order_sql = "
 SELECT d.MaDon, d.NgayLap, d.TongTien, k.HoTen AS TenKH, n.HoTen AS TenNV
 FROM DonHang d
@@ -30,21 +20,11 @@ $order_stmt = $conn->prepare($order_sql);
 $order_stmt->bind_param("i", $maDon);
 $order_stmt->execute();
 $order_result = $order_stmt->get_result();
-
 if ($order_result->num_rows == 0) {
-    echo "<div class='container mt-4'>
-            <div class='alert alert-danger text-center'>
-                Không tìm thấy đơn hàng.
-            </div>
-          </div>";
+    echo "<div class='container mt-4'><div class='alert alert-danger text-center'>Không tìm thấy đơn hàng.</div></div>";
     exit;
 }
-
 $order = $order_result->fetch_assoc();
-
-// ==========================
-// Truy vấn chi tiết sản phẩm
-// ==========================
 $detail_sql = "
 SELECT c.MaBanh, b.TenBanh, c.SoLuong, c.DonGia, c.ThanhTien
 FROM ChiTietDonHang c
@@ -57,57 +37,126 @@ $detail_stmt->execute();
 $detail_result = $detail_stmt->get_result();
 ?>
 
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Chi tiết đơn hàng #<?= htmlspecialchars($order['MaDon']) ?></h5>
-            <a href="QuanLyDonHang.php" class="btn btn-light btn-sm">
+<style>
+    .invoice-box {
+        padding: 25px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #333;
+    }
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .invoice-header div {
+        font-size: 0.95rem;
+    }
+    .invoice-header strong {
+        display: block;
+        color: #555;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+    }
+    .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .invoice-table thead th {
+        border-bottom: 2px solid #333; /* Đường kẻ đậm cho header */
+        padding: 10px 5px;
+        text-align: left;
+        background: none;
+        color: #333;
+    }
+    .invoice-table tbody td {
+        border-bottom: 1px solid #eee; /* Đường kẻ mờ cho các hàng */
+        padding: 12px 5px;
+    }
+    /* Căn phải cho các cột số */
+    .invoice-table thead th:nth-child(3),
+    .invoice-table tbody td:nth-child(3),
+    .invoice-table thead th:nth-child(4),
+    .invoice-table tbody td:nth-child(4),
+    .invoice-table thead th:nth-child(5),
+    .invoice-table tbody td:nth-child(5) {
+        text-align: right;
+    }
+    .invoice-total {
+        margin-top: 25px;
+        text-align: right;
+    }
+    .invoice-total strong {
+        font-size: 1.25rem;
+        color: #256176; /* Màu xanh chủ đạo */
+    }
+</style>
+
+<div>
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Chi tiết đơn hàng #<?= htmlspecialchars($order['MaDon']) ?></h5>
+ <a href="QuanLyDonHang.php" class="btn btn-light btn-sm">
                 <i class="fas fa-arrow-left"></i> Quay lại
-            </a>
+            </a>       
+    </div>
+
+    <div class="card-body invoice-box">
+        
+        <div class="invoice-header">
+            <div>
+                <strong>Khách hàng:</strong>
+                <?= htmlspecialchars($order['TenKH']) ?>
+            </div>
+            <div>
+                <strong>Nhân viên:</strong>
+                <?= htmlspecialchars($order['TenNV']) ?>
+            </div>
+            <div style="text-align: right;">
+                <strong>Ngày lập:</strong>
+                <?= htmlspecialchars($order['NgayLap']) ?>
+            </div>
         </div>
 
-        <div class="card-body">
-            <!-- Thông tin đơn hàng -->
-            <p><strong>Khách hàng:</strong> <?= htmlspecialchars($order['TenKH']) ?></p>
-            <p><strong>Nhân viên:</strong> <?= htmlspecialchars($order['TenNV']) ?></p>
-            <p><strong>Ngày lập:</strong> <?= $order['NgayLap'] ?></p>
-
-            <!-- Bảng chi tiết sản phẩm -->
-            <table class="table table-bordered text-center mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Mã bánh</th>
-                        <th>Tên bánh</th>
-                        <th>Số lượng</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                $tong = 0;
-                if ($detail_result->num_rows > 0) {
-                    while ($row = $detail_result->fetch_assoc()) {
-                        $tong += $row['ThanhTien'];
-                        echo "<tr>
-                                <td>{$row['MaBanh']}</td>
-                                <td>{$row['TenBanh']}</td>
-                                <td>{$row['SoLuong']}</td>
-                                <td>" . number_format($row['DonGia'], 0, ',', '.') . " đ</td>
-                                <td>" . number_format($row['ThanhTien'], 0, ',', '.') . " đ</td>
-                              </tr>";
-                    }
-                    echo "<tr class='table-warning'>
-                            <td colspan='4'><strong>Tổng cộng:</strong></td>
-                            <td><strong>" . number_format($tong, 0, ',', '.') . " đ</strong></td>
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Mã bánh</th>
+                    <th>Tên bánh</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            $tong = 0;
+            if ($detail_result->num_rows > 0) {
+                while ($row = $detail_result->fetch_assoc()) {
+                    $tong += $row['ThanhTien'];
+                    echo "<tr>
+                            <td>{$row['MaBanh']}</td>
+                            <td>{$row['TenBanh']}</td>
+                            <td>{$row['SoLuong']}</td>
+                            <td>" . number_format($row['DonGia'], 0, ',', '.') . " đ</td>
+                            <td>" . number_format($row['ThanhTien'], 0, ',', '.') . " đ</td>
                           </tr>";
-                } else {
-                    echo "<tr><td colspan='5'>Không có sản phẩm trong đơn hàng.</td></tr>";
                 }
-                ?>
-                </tbody>
-            </table>
+            } else {
+                echo "<tr><td colspan='5' style='text-align:center;'>Không có sản phẩm.</td></tr>";
+            }
+            ?>
+            </tbody>
+        </table>
+        
+        <div class="invoice-total">
+            <strong style="display:inline-block; margin-right: 20px;">Tổng cộng:</strong>
+            <strong><?= number_format($tong, 0, ',', '.') ?> đ</strong>
         </div>
+
     </div>
 </div>
 
