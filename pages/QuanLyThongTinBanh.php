@@ -1,8 +1,7 @@
 <?php
-// TÔI ĐÃ SỬA LẠI FILE NÀY
-include '../db/connect.php'; // <-- ĐÃ SỬA: Sửa 'include' thành 'db/connect.php' theo cấu trúc mới
-include '../include/header.php'; 
-include '../include/sidebar.php'; 
+include '../db/connect.php';
+include '../include/header.php';
+include '../include/sidebar.php';
 
 // ======== XỬ LÝ THÊM BÁNH MỚI ========
 if (isset($_POST['them'])) {
@@ -12,7 +11,6 @@ if (isset($_POST['them'])) {
     $loai = intval($_POST['loai']);
     $tenAnh = '';
 
-    // Upload ảnh
     if (isset($_FILES['hinhanh']) && $_FILES['hinhanh']['error'] == 0) {
         $fileTmp = $_FILES['hinhanh']['tmp_name'];
         $fileName = basename($_FILES['hinhanh']['name']);
@@ -25,14 +23,13 @@ if (isset($_POST['them'])) {
     $sqlInsert = "INSERT INTO ThongTinBanh (TenBanh, Gia, SoLuong, MaLoaiBanh, TinhTrang, HinhAnh)
                   VALUES ('$ten', $gia, $soluong, $loai, 1, '$tenAnh')";
     if ($conn->query($sqlInsert)) {
-        echo "<script>window.location='QuanLyThongTinBanh.php';</script>";
-        exit;
+        $successMsg = "Đã thêm bánh mới thành công!";
     } else {
         $errMsg = "Lỗi khi thêm bánh: " . htmlspecialchars($conn->error);
     }
 }
 
-// ======== XỬ LÝ CẬP NHẬT (ĐÃ SỬA LOGIC SỐ LƯỢNG) ========
+// ======== XỬ LÝ CẬP NHẬT ========
 if (isset($_POST['luu_sua'])) {
     $ma = intval($_POST['sua_ma']);
     $ten = $conn->real_escape_string(trim($_POST['sua_ten']));
@@ -40,22 +37,10 @@ if (isset($_POST['luu_sua'])) {
     $loai = intval($_POST['sua_loai']);
     $tinhtrang = intval($_POST['sua_tinhtrang']);
     
-    // ======== LOGIC CẬP NHẬT KHO MỚI ========
-    $soluong_goc = intval($_POST['sua_soluong_goc']); // Lấy số lượng gốc
-    $nhap_hang = intval($_POST['nhap_hang']);       // Lấy số lượng nhập
-    $xuat_hang = intval($_POST['xuat_hang']);       // Lấy số lượng xuất
-
-    // Tính toán số lượng mới
-    $soluong_moi = $soluong_goc + $nhap_hang - $xuat_hang;
-
-    // Đảm bảo số lượng không bị âm
-    if ($soluong_moi < 0) {
-        $soluong_moi = 0;
-    }
-    
-    // Gán biến $soluong để câu SQL UPDATE sử dụng
-    $soluong = $soluong_moi;
-    // ======== KẾT THÚC LOGIC MỚI ========
+    $soluong_goc = intval($_POST['sua_soluong_goc']);
+    $nhap_hang = intval($_POST['nhap_hang']);
+    $xuat_hang = intval($_POST['xuat_hang']);
+    $soluong_moi = max(0, $soluong_goc + $nhap_hang - $xuat_hang);
 
     $anh_cu = $_POST['anh_cu'];
     $tenAnhMoi = $anh_cu;
@@ -69,46 +54,66 @@ if (isset($_POST['luu_sua'])) {
         }
     }
 
-    // Câu SQL này vẫn giữ nguyên, vì nó dùng biến $soluong đã được tính toán ở trên
     $sqlUpdate = "UPDATE ThongTinBanh 
-                  SET TenBanh='$ten', Gia=$gia, SoLuong=$soluong, MaLoaiBanh=$loai, TinhTrang=$tinhtrang, HinhAnh='$tenAnhMoi'
+                  SET TenBanh='$ten', Gia=$gia, SoLuong=$soluong_moi, MaLoaiBanh=$loai, TinhTrang=$tinhtrang, HinhAnh='$tenAnhMoi'
                   WHERE MaBanh=$ma";
     if ($conn->query($sqlUpdate)) {
-        echo "<script>window.location='QuanLyThongTinBanh.php';</script>";
-        exit;
-    } else {
-        $errMsg = "Lỗi khi cập nhật bánh: " . htmlspecialchars($conn->error);
-    }
+    echo "<div id='overlay'></div>";
+    echo "<div class='popup' style='background:#198754;color:#fff;'>Cập nhật bánh thành công!</div>";
+    echo "<script>
+            setTimeout(()=> window.location.href='QuanLyThongTinBanh.php', );
+          </script>";
+    exit;
+}
 }
 
-// ======== XỬ LÝ XÓA HOẶC HỎI KHÓA ========
-if (isset($_GET['xoa'])) {
-    $maBanh = intval($_GET['xoa']);
+// ======== XỬ LÝ HỎI XÁC NHẬN XÓA ========
+if (isset($_GET['kiemtraxoa'])) {
+    $maBanh = intval($_GET['kiemtraxoa']);
+    $tenBanh = urldecode($_GET['ten'] ?? '');
+    $tenEsc = htmlspecialchars($tenBanh);
+
+    echo "<style>
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; }
+        .popup { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(1); background: #fff; border-radius:10px; padding:28px 30px; z-index:1055; box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align:center; }
+        .btn-popup { padding:8px 18px; border-radius:6px; }
+    </style>";
+
+    echo "<div id='overlay'></div>";
+    echo "
+    <div class='popup'>
+        <h5>Bạn có chắc chắn muốn xóa bánh \"$tenEsc\"?</h5>
+        <div class='d-flex justify-content-center gap-2 mt-3'>
+            <a href='?xacnhanxoa=$maBanh&ten=" . urlencode($tenBanh) . "' class='btn btn-danger btn-popup'>Xóa</a>
+            <a href='QuanLyThongTinBanh.php' class='btn btn-secondary btn-popup'>Hủy</a>
+        </div>
+    </div>";
+    exit;
+}
+
+// ======== XỬ LÝ XÁC NHẬN XÓA / KHÓA ========
+if (isset($_GET['xacnhanxoa'])) {
+    $maBanh = intval($_GET['xacnhanxoa']);
     $tenBanh = urldecode($_GET['ten'] ?? '');
 
     $sqlCheck = "SELECT COUNT(*) AS SoLanBan FROM ChiTietDonHang WHERE MaBanh = $maBanh";
     $res = $conn->query($sqlCheck);
-    $daBan = false;
-    if ($res) $daBan = $res->fetch_assoc()['SoLanBan'] > 0;
+    $daBan = $res && $res->fetch_assoc()['SoLanBan'] > 0;
 
     echo "<style>
-        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; animation: fadeIn .25s ease; }
-        .popup { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(1); background: #fff; border-radius:10px; padding:28px 30px; z-index:1055; box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align:center; animation: popupShow .25s ease; }
-        .popup h5 { margin-bottom:12px; }
-        .btn-popup { padding:8px 18px; border-radius:6px; }
-        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-        @keyframes popupShow { from { transform: translate(-50%,-50%) scale(.92); opacity:0 } to { transform: translate(-50%,-50%) scale(1); opacity:1 } }
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1050; }
+        .popup { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(1); background: #fff; border-radius:10px; padding:28px 30px; z-index:1055; box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align:center; }
     </style>";
-    echo "<div id='overlay'></div>";
 
+    echo "<div id='overlay'></div>";
     if ($daBan) {
         $tenEsc = htmlspecialchars($tenBanh);
         echo "
         <div class='popup'>
-            <h5>Bánh \"{$tenEsc}\" đã từng được bán!</h5>
+            <h5>Bánh \"$tenEsc\" đã từng được bán!</h5>
             <p>Bạn có muốn <b>ẩn (khóa)</b> bánh này không?</p>
             <div class='d-flex justify-content-center gap-2 mt-3'>
-                <a href='QuanLyThongTinBanh.php?khoa={$maBanh}' class='btn btn-warning btn-popup'>Khóa</a>
+                <a href='?khoa=$maBanh' class='btn btn-warning btn-popup'>Khóa</a>
                 <a href='QuanLyThongTinBanh.php' class='btn btn-secondary btn-popup'>Hủy</a>
             </div>
         </div>";
@@ -140,36 +145,29 @@ if (isset($_GET['khoa'])) {
 <div class="container mt-4">
     <h2 class="text-center mb-4 text-primary">QUẢN LÝ THÔNG TIN BÁNH</h2>
 
- <form method="GET" class="d-flex flex-wrap align-items-end gap-4 mb-4">
-    <div style="min-width:300px;">
-        <label for="search" class="form-label mb-1 fw-semibold">Tìm kiếm bánh</label>
-        <input type="text" id="search" name="search"
-               class="form-control"
-               placeholder="Nhập tên bánh hoặc loại bánh..."
-               value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-    </div>
+    <?php 
+    if (!empty($errMsg)) echo "<div class='alert alert-danger'>$errMsg</div>";
+    if (!empty($successMsg)) echo "<div class='alert alert-success'>$successMsg</div>";
+    ?>
 
-    <div class="d-flex align-items-end gap-3">
-        <button class="btn btn-primary px-4" type="submit"> <i class="fas fa-search"></i> Tìm</button>
+    <!-- Tìm kiếm -->
+    <form method="GET" class="d-flex flex-wrap align-items-end gap-4 mb-4">
+        <div style="min-width:300px;">
+            <label for="search" class="form-label mb-1 fw-semibold">Tìm kiếm bánh</label>
+            <input type="text" id="search" name="search"
+                   class="form-control"
+                   placeholder="Nhập tên bánh hoặc loại bánh..."
+                   value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+        </div>
 
-        <?php if (!empty($_GET['search'])): ?>
-            <a href="QuanLyThongTinBanh.php" class="btn btn-secondary px-4">Xóa</a>
-        <?php endif; ?>
-    </div>
-</form>
+        <div class="d-flex align-items-end gap-3">
+            <button class="btn btn-primary px-4" type="submit"> <i class="fas fa-search"></i> Tìm</button>
 
-
-<style>
-form.d-flex.flex-wrap.align-items-end.mb-4 {
-    gap: 20px !important; /* Khoảng cách giữa input và các nút */
-}
-form.d-flex.flex-wrap.align-items-end.mb-4 button,
-form.d-flex.flex-wrap.align-items-end.mb-4 a {
-    margin-left: 8px;
-}
-</style>
-
-    <?php if (!empty($errMsg)) echo "<div class='alert alert-danger'>$errMsg</div>"; ?>
+            <?php if (!empty($_GET['search'])): ?>
+                <a href="QuanLyThongTinBanh.php" class="btn btn-secondary px-4">Xóa</a>
+            <?php endif; ?>
+        </div>
+    </form>
 
     <div class="card shadow-sm p-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
@@ -193,18 +191,15 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
             <tbody>
             <?php
             $search = $conn->real_escape_string($_GET['search'] ?? '');
-
             $sql = "SELECT tb.*, lb.TenLoaiBanh 
                     FROM ThongTinBanh tb
                     JOIN LoaiBanh lb ON tb.MaLoaiBanh = lb.MaLoaiBanh";
-
             if ($search !== '') {
                 $sql .= " WHERE tb.TenBanh LIKE '%$search%' OR lb.TenLoaiBanh LIKE '%$search%'";
             }
-
             $sql .= " ORDER BY tb.MaBanh ASC";
-
             $res = $conn->query($sql);
+
             if ($res && $res->num_rows > 0) {
                 while ($row = $res->fetch_assoc()) {
                     $ma = $row['MaBanh'];
@@ -215,14 +210,10 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                     $soluong = $row['SoLuong'];
                     $hinhAnh = $row['HinhAnh'];
                     $tinhtrang = (int)$row['TinhTrang'];
-
                     $badge = $tinhtrang
                         ? "<span class='badge bg-success text-dark px-3 py-2'>Mở</span>"
                         : "<span class='badge bg-danger text-dark px-3 py-2'>Khóa</span>";
-                    
-                    // Sửa đường dẫn ảnh
-                    $hinhAnhPath = $hinhAnh ? (BASE_APP_PATH . "/img/" . $hinhAnh) : '';
-
+                    $hinhAnhPath = $hinhAnh ? ("../img/" . $hinhAnh) : '';
 
                     echo "
                     <tr>
@@ -248,7 +239,7 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                                     data-anh='$hinhAnh'>
                                 Sửa
                             </button>
-                            <a href='?xoa=$ma&ten=" . urlencode($ten) . "' class='btn btn-danger btn-sm'>Xóa</a>
+                            <a href='?kiemtraxoa=$ma&ten=" . urlencode($ten) . "' class='btn btn-danger btn-sm'>Xóa</a>
                         </td>
                     </tr>";
                 }
@@ -261,6 +252,7 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
     </div>
 </div>
 
+<!-- Modal Sửa -->
 <div class="modal fade" id="modalSuaBanh" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-lg"> 
     <div class="modal-content border-0 shadow-lg rounded-4">
@@ -276,7 +268,6 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
           <input type="hidden" id="sua_soluong_goc" name="sua_soluong_goc">
 
           <div class="row">
-          
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label fw-semibold">Tên bánh</label>
@@ -286,7 +277,6 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                 <label class="form-label fw-semibold">Loại bánh</label>
                 <select id="sua_loai" name="sua_loai" class="form-select" required>
                   <?php
-                  // Chạy lại query để lấy danh sách loại bánh
                   $resLoaiModal = $conn->query("SELECT * FROM LoaiBanh WHERE TinhTrang = 1");
                   while ($rowLoai = $resLoaiModal->fetch_assoc()) {
                       echo "<option value='{$rowLoai['MaLoaiBanh']}'>{$rowLoai['TenLoaiBanh']}</option>";
@@ -305,7 +295,8 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                   <option value="0">Khóa</option>
                 </select>
               </div>
-            </div> <div class="col-md-6">
+            </div>
+            <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label fw-semibold">Số lượng tồn kho hiện tại</label>
                 <input type="number" class="form-control" id="so_luong_hien_tai" readonly style="background-color: #e9ecef;">
@@ -326,7 +317,10 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
                 <label class="form-label fw-semibold">Hình ảnh mới (nếu muốn thay)</label>
                 <input type="file" class="form-control" id="sua_hinhanh" name="sua_hinhanh" accept="image/*">
               </div>
-            </div> </div> </div> <div class="modal-footer border-0 pt-0 pb-4 px-4">
+            </div> 
+          </div> 
+        </div> 
+        <div class="modal-footer border-0 pt-0 pb-4 px-4">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
           <button type="submit" name="luu_sua" class="btn btn-success">Lưu thay đổi</button>
         </div>
@@ -335,47 +329,32 @@ form.d-flex.flex-wrap.align-items-end.mb-4 a {
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = new bootstrap.Modal(document.getElementById('modalSuaBanh'));
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('sua_ma').value = btn.dataset.id;
-            document.getElementById('sua_ten').value = btn.dataset.ten;
-            document.getElementById('sua_gia').value = btn.dataset.gia;
-            document.getElementById('sua_tinhtrang').value = btn.dataset.tinhtrang;
-            document.getElementById('sua_loai').value = btn.dataset.loai;
-            document.getElementById('anh_cu').value = btn.dataset.anh;
-            
-            // ========== SỬA LOGIC SỐ LƯỢNG MỚI ==========
-            // Gán giá trị cho ô 'số lượng hiện tại' (để xem)
-            document.getElementById('so_luong_hien_tai').value = btn.dataset.soluong; 
-            // Gán giá trị cho ô 'số lượng gốc' (để gửi đi)
-            document.getElementById('sua_soluong_goc').value = btn.dataset.soluong; 
-            
-            // Reset 2 ô nhập/xuất về 0 mỗi khi mở modal
-            document.getElementById('nhap_hang').value = 0;
-            document.getElementById('xuat_hang').value = 0;
-            // ========== HẾT SỬA LOGIC ==========
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
-            modal.show();
-        });
-    });
-});
+<script>
+  const editButtons = document.querySelectorAll('.btn-edit');
+  const modal = new bootstrap.Modal(document.getElementById('modalSuaBanh'));
+  editButtons.forEach(btn => {
+      btn.addEventListener('click', ()=> {
+          document.getElementById('sua_ma').value = btn.dataset.id;
+          document.getElementById('sua_ten').value = btn.dataset.ten;
+          document.getElementById('sua_gia').value = btn.dataset.gia;
+          document.getElementById('sua_loai').value = btn.dataset.loai;
+          document.getElementById('sua_tinhtrang').value = btn.dataset.tinhtrang;
+          document.getElementById('anh_cu').value = btn.dataset.anh;
+          document.getElementById('sua_soluong_goc').value = btn.dataset.soluong;
+          document.getElementById('so_luong_hien_tai').value = btn.dataset.soluong;
+          document.getElementById('nhap_hang').value = 0;
+          document.getElementById('xuat_hang').value = 0;
+          modal.show();
+      });
+  });
 </script>
 
 <style>
-.form-control, .form-select {
-  font-size: 15px;
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  transition: all 0.2s ease-in-out;
-}
-.form-control:focus, .form-select:focus {
-  border-color: #f0ad4e;
-  box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
-}
+.form-control, .form-select { font-size: 15px; padding: 10px 14px; border: 1px solid #ccc; transition: all 0.2s ease-in-out; }
+.form-control:focus, .form-select:focus { border-color: #f0ad4e; box-shadow: 0 0 5px rgba(240, 173, 78, 0.4); }
 </style>
 
-<?php include '../include/footer.php'; 
- ?>
+<?php include '../include/footer.php'; ?>
