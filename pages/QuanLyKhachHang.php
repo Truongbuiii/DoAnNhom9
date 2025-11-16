@@ -8,14 +8,16 @@ if (isset($_GET['kiemtraxoa'])) {
     $ten = urldecode($_GET['ten'] ?? '');
     $tenEsc = htmlspecialchars($ten);
     
+    echo "<div id='overlay'></div>"; // <-- THÊM OVERLAY
     echo "
     <div class='bg-light border shadow-lg p-4 rounded text-center' 
          style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
         
         <h5>Bạn có chắc chắn muốn xóa khách hàng \"{$tenEsc}\"?</h5>
-        <div class='d-flex justify-content-center gap-2 mt-3'>
+        <p>Hệ thống sẽ kiểm tra các đơn hàng liên quan.</p>
+        <div class='d-flex justify-content-center mt-3'>
             <a href='QuanLyKhachHang.php?xacnhanxoa=$ma&ten=" . urlencode($ten) . "' class='btn btn-danger px-4'>Xóa</a>
-            <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
+            <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4 ms-3'>Hủy</a>
         </div>
     </div>
     ";
@@ -23,25 +25,30 @@ if (isset($_GET['kiemtraxoa'])) {
 
 // 🗑️ Xử lý xóa hoặc khóa khách hàng
 if (isset($_GET['xacnhanxoa'])) {
-$ma = intval($_GET['xacnhanxoa']);
+    // ✅ SỬA LỖI: THÊM LẠI CÁC BIẾN BỊ THIẾU
+    $ma = intval($_GET['xacnhanxoa']);
     $ten = urldecode($_GET['ten'] ?? '');
-    $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma");    if ($kiemTra && $kiemTra->num_rows > 0) {
+    $kiemTra = $conn->query("SELECT * FROM DonHang WHERE MaKH = $ma"); 
+
+    if ($kiemTra && $kiemTra->num_rows > 0) {
         // Có đơn hàng rồi → hỏi người dùng có muốn khóa
+        echo "<div id='overlay'></div>"; // <-- THÊM OVERLAY
         echo "
         <div class='bg-light border shadow-lg p-4 rounded text-center' 
              style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
             
             <h5>Khách hàng \"$ten\" đã có đơn hàng, không thể xóa!</h5>
             <p>Bạn có muốn <b>Khóa</b> khách hàng này không?</p>
-            <div class='d-flex justify-content-center gap-2 mt-3'>
+            <div class='d-flex justify-content-center mt-3'>
                 <a href='QuanLyKhachHang.php?khoa=$ma' class='btn btn-warning px-4'>Khóa</a>
-                <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4'>Hủy</a>
+                <a href='QuanLyKhachHang.php' class='btn btn-secondary px-4 ms-3'>Hủy</a>
             </div>
         </div>
         ";
     } else {
         // Không có đơn hàng → xóa luôn
         if ($conn->query("DELETE FROM KhachHang WHERE MaKH = $ma")) {
+            echo "<div id='overlay'></div>"; // <-- THÊM OVERLAY
             echo "
             <div class='bg-success text-white p-4 rounded shadow text-center' 
                  style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
@@ -50,8 +57,17 @@ $ma = intval($_GET['xacnhanxoa']);
             <script>
                 setTimeout(() => window.location.href='QuanLyKhachHang.php', 1200);
             </script>";
-        } 
-        // ... (phần code lỗi) ...
+        } else {
+             echo "<div id='overlay'></div>"; // <-- THÊM OVERLAY
+             echo "
+             <div class='bg-danger text-white p-4 rounded shadow text-center' 
+                 style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
+                 Lỗi khi xóa: " . htmlspecialchars($conn->error) . "
+            </div>
+            <script>
+                setTimeout(() => window.location.href='QuanLyKhachHang.php', 2000);
+            </script>";
+        }
     }
 }
 
@@ -59,6 +75,7 @@ $ma = intval($_GET['xacnhanxoa']);
 if (isset($_GET['khoa'])) {
     $ma = intval($_GET['khoa']);
     if ($conn->query("UPDATE KhachHang SET TinhTrang = 0 WHERE MaKH = $ma")) {
+        echo "<div id='overlay'></div>"; // <-- THÊM OVERLAY
         echo "
         <div class='bg-warning text-dark p-4 rounded shadow text-center' 
              style='position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1055;'>
@@ -73,17 +90,14 @@ if (isset($_GET['khoa'])) {
 }
 ?>
 
-<!-- Begin Page Content -->
 <div class="container-fluid">
     <h2 class="text-center mb-4 text-primary">Quản lý khách hàng</h2>
 
     <div class="mb-3 d-flex justify-content-between align-items-center">
-    <!-- Nút thêm khách hàng bên trái -->
     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalThemKhachHang">
         Thêm khách hàng
     </button>
 
-    <!-- Form tìm kiếm gọn bên phải -->
     <form method="GET" class="d-flex align-items-center gap-1">
         <input type="text" name="timkiem" class="form-control form-control-sm" placeholder="Hãy nhập Họ tên hoặc SĐT" value="<?php echo htmlspecialchars($_GET['timkiem'] ?? ''); ?>" style="width: 300px;">
         <button type="submit" class="btn btn-primary btn-sm">      <i class="fas fa-search"></i> Tìm
@@ -94,7 +108,6 @@ if (isset($_GET['khoa'])) {
     </form>
 </div>
 
-    <!-- 💬 Modal Thêm khách hàng -->
     <div class="modal fade" id="modalThemKhachHang" tabindex="-1" aria-labelledby="modalThemKhachHangLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
@@ -180,7 +193,6 @@ if (isset($_GET['khoa'])) {
     $result = $conn->query($sql);
     ?>
 
-    <!-- 📋 Danh sách khách hàng -->
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="text-primary mb-3">Danh sách khách hàng</h5>
         <table class="table table-bordered text-center text-dark align-middle">
@@ -220,10 +232,10 @@ if (isset($_GET['khoa'])) {
                                         data-tinhtrang='$tinhtrang'>
                                     <i class='fas fa-edit'></i> Sửa
                                 </button>
-                               <a href='QuanLyKhachHang.php?kiemtraxoa=$ma&ten=" . urlencode($ten) . "' 
-   class='btn btn-danger btn-sm'>
-    <i class='fas fa-trash'></i> Xóa
-</a>
+                                <a href='QuanLyKhachHang.php?kiemtraxoa=$ma&ten=" . urlencode($ten) . "' 
+                                   class='btn btn-danger btn-sm'>
+                                    <i class='fas fa-trash'></i> Xóa
+                                </a>
                             </td>
                         </tr>";
                     }
@@ -236,12 +248,10 @@ if (isset($_GET['khoa'])) {
     </div>
 </div>
 
-<!-- 🔧 Modal Sửa khách hàng -->
 <div class="modal fade" id="modalSuaKhachHang" tabindex="-1" aria-labelledby="modalSuaKhachHangLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg rounded-4">
       
-      <!-- Header -->
       <div class="modal-header bg-warning text-white rounded-top-4">
         <h5 class="modal-title fw-semibold" id="modalSuaKhachHangLabel">
           Sửa thông tin khách hàng
@@ -249,7 +259,6 @@ if (isset($_GET['khoa'])) {
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
       </div>
 
-      <!-- Form -->
       <form method="POST" action="">
         <div class="modal-body p-4">
           <input type="hidden" id="sua_ma" name="sua_ma">
@@ -274,7 +283,6 @@ if (isset($_GET['khoa'])) {
 
         </div>
 
-        <!-- Footer -->
         <div class="modal-footer border-0 pt-0 pb-4 px-4">
           <button type="button" class="btn btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
           <button type="submit" name="luu_sua" class="btn btn-success rounded-3 px-4 fw-semibold">
@@ -323,6 +331,23 @@ if (isset($_GET['khoa'])) {
 .form-control:focus, .form-select:focus {
   border-color: #f0ad4e;
   box-shadow: 0 0 5px rgba(240, 173, 78, 0.4);
+}
+
+/* ✅ 5. THÊM CSS CHO OVERLAY (LÀM MỜ MÀN HÌNH) */
+#overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.5); /* Màu đen mờ 50% */
+    z-index: 1050; /* Phải thấp hơn z-index của popup (1055) */
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0 } 
+    to { opacity: 1 } 
 }
 </style>
 
